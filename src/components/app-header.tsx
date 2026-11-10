@@ -31,7 +31,9 @@ export function AppHeader({ member, area }: { member: Member; area: 'czlonek' | 
               <span className="font-semibold">
                 {member.first_name} {member.last_name}
               </span>
-              <span className={board ? 'text-sm text-[#DCE5F0]' : 'text-sm text-ink-muted'}>nr członkowski {member.member_no}</span>
+              {member.member_no && (
+                <span className={board ? 'text-sm text-[#DCE5F0]' : 'text-sm text-ink-muted'}>nr członkowski {member.member_no}</span>
+              )}
             </span>
           </div>
           <form action="/wyloguj" method="post">

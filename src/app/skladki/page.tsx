@@ -1,5 +1,4 @@
-import { AppHeader } from '@/components/app-header';
-import { MemberNav } from '@/components/member-nav';
+import { MemberShell } from '@/components/shell';
 import { formatAmount, formatDate, formatMonth } from '@/lib/format';
 import { requireMember } from '@/lib/session';
 
@@ -19,10 +18,7 @@ export default async function DuesPage() {
   const monthsDue = dues?.months_due ?? 0;
 
   return (
-    <div className="min-h-screen">
-      <AppHeader member={member} area="czlonek" />
-      <MemberNav current="/skladki" />
-      <main className="mx-auto flex max-w-[1360px] flex-col gap-5 px-6 py-6">
+    <MemberShell member={member} current="/skladki">
         <h1 className="text-[28px] font-bold">Składki</h1>
         <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-4">
           <div className="card flex flex-col gap-1.5">
@@ -79,7 +75,6 @@ export default async function DuesPage() {
         <p className="text-ink-muted">
           Składki wpisuje zarząd na podstawie wpłat na konto związku. Widzisz rozbieżność? Napisz do skarbnika.
         </p>
-      </main>
-    </div>
+    </MemberShell>
   );
 }

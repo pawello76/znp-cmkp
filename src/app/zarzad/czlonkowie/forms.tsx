@@ -7,13 +7,13 @@ import {
   resetPassword,
   type AccountResult,
   type ResetResult,
-} from './actions';
+} from '../actions';
 
 function TempPasswordNotice({ created }: { created: NonNullable<AccountResult['created']> }) {
   return (
     <div role="status" className="flex flex-col gap-1 rounded-lg bg-ok-light px-4 py-3 text-ok">
       <strong>
-        Konto utworzone: {created.name}, nr {created.memberNo}
+        Konto utworzone: {created.name}, login {created.login}
       </strong>
       <span className="text-ink">
         Hasło tymczasowe: <code className="rounded bg-white px-2 py-0.5 font-mono text-base font-bold">{created.tempPassword}</code>
@@ -31,11 +31,17 @@ export function AddMemberForm() {
   return (
     <form action={formAction} className="flex flex-col gap-3">
       <div className="flex flex-wrap items-end gap-3">
+        <div className="flex flex-[1_1_160px] flex-col gap-1.5">
+          <label htmlFor="add-login" className="label">
+            Login
+          </label>
+          <input id="add-login" name="login" required inputMode="numeric" className="field" />
+        </div>
         <div className="flex flex-[1_1_140px] flex-col gap-1.5">
           <label htmlFor="add-no" className="label">
-            Numer członkowski
+            Numer członkowski (opcjonalnie)
           </label>
-          <input id="add-no" name="member_no" required placeholder="wpisuje zarząd" className="field" />
+          <input id="add-no" name="member_no" placeholder="można nadać później" className="field" />
         </div>
         <div className="flex flex-[1_1_160px] flex-col gap-1.5">
           <label htmlFor="add-first" className="label">
@@ -95,6 +101,7 @@ export function AddMemberForm() {
 
 export function ApproveDeclarationForm({ declarationId }: { declarationId: string }) {
   const [state, formAction, pending] = useActionState<AccountResult, FormData>(approveDeclaration, {});
+  const loginId = `login-${declarationId}`;
   const inputId = `nr-${declarationId}`;
 
   if (state.created) return <TempPasswordNotice created={state.created} />;
@@ -104,10 +111,16 @@ export function ApproveDeclarationForm({ declarationId }: { declarationId: strin
       <input type="hidden" name="declaration_id" value={declarationId} />
       <div className="flex flex-wrap items-end gap-2">
         <div className="flex flex-[0_1_200px] flex-col gap-1.5">
-          <label htmlFor={inputId} className="label">
-            Numer członkowski
+          <label htmlFor={loginId} className="label">
+            Login
           </label>
-          <input id={inputId} name="member_no" required className="field h-11" />
+          <input id={loginId} name="login" required inputMode="numeric" className="field h-11" />
+        </div>
+        <div className="flex flex-[0_1_200px] flex-col gap-1.5">
+          <label htmlFor={inputId} className="label">
+            Numer członkowski (opcjonalnie)
+          </label>
+          <input id={inputId} name="member_no" className="field h-11" />
         </div>
         <button type="submit" className="btn-primary" disabled={pending}>
           {pending ? 'Zatwierdzanie…' : 'Zatwierdź i utwórz konto'}

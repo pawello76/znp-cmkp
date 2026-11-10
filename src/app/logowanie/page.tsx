@@ -25,7 +25,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
         <div className="card flex w-full max-w-[440px] flex-col gap-5 p-8">
           <div className="flex flex-col gap-1.5">
             <h2 className="text-[26px] font-bold">Zaloguj się</h2>
-            <p className="text-ink-muted">Użyj numeru członkowskiego i hasła.</p>
+            <p className="text-ink-muted">Użyj loginu i hasła otrzymanych od zarządu.</p>
           </div>
           {blad === 'konto' && (
             <p role="alert" className="rounded-lg bg-warn-light px-4 py-3 font-semibold text-warn">

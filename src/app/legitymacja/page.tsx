@@ -1,5 +1,4 @@
-import { AppHeader } from '@/components/app-header';
-import { MemberNav } from '@/components/member-nav';
+import { MemberShell } from '@/components/shell';
 import { formatDate, formatMonth } from '@/lib/format';
 import { cardValidUntil, requireMember } from '@/lib/session';
 import { PhotoUpload, PrintButton } from './photo-upload';
@@ -18,12 +17,7 @@ export default async function CardPage() {
   const initials = `${member.first_name[0] ?? ''}${member.last_name[0] ?? ''}`;
 
   return (
-    <div className="min-h-screen">
-      <div className="no-print">
-        <AppHeader member={member} area="czlonek" />
-      </div>
-      <MemberNav current="/legitymacja" />
-      <main className="mx-auto flex max-w-[1360px] flex-col gap-5 px-6 py-6">
+    <MemberShell member={member} current="/legitymacja">
         <h1 className="no-print text-[28px] font-bold">Cyfrowa legitymacja</h1>
 
         <section aria-label="Legitymacja członkowska" className="print-card w-full max-w-[560px] overflow-hidden rounded-[14px] border border-line bg-white">
@@ -53,7 +47,7 @@ export default async function CardPage() {
               </div>
               <div>
                 <dt className="text-[13px] text-ink-muted">Numer członkowski</dt>
-                <dd className="font-semibold">{member.member_no}</dd>
+                <dd className="font-semibold">{member.member_no ?? 'nadawany przez zarząd'}</dd>
               </div>
               <div>
                 <dt className="text-[13px] text-ink-muted">Data przyjęcia</dt>
@@ -87,7 +81,6 @@ export default async function CardPage() {
           <PrintButton />
           <PhotoUpload memberId={member.id} photoPath={member.photo_path} />
         </div>
-      </main>
-    </div>
+    </MemberShell>
   );
 }

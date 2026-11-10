@@ -1,173 +1,190 @@
-import { AppHeader } from '@/components/app-header';
-import { BoardNav } from '@/components/board-nav';
-import { formatDate } from '@/lib/format';
+import { BoardShell } from '@/components/shell';
+import { formatDateTime } from '@/lib/format';
 import { requireBoard } from '@/lib/session';
-import { rejectDeclaration, resetTwoFactor, toggleBlock } from './actions';
-import { AddMemberForm, ApproveDeclarationForm, ResetPasswordButton } from './forms';
 
-export default async function BoardPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
+function Stat({ value, label, alert = false }: { value: number | string; label: string; alert?: boolean }) {
+  return (
+    <div className="flex flex-col">
+      <span className={`text-[30px] font-bold leading-tight ${alert ? 'text-[#9B1C1C]' : ''}`}>{value}</span>
+      <span className="text-sm text-ink-muted">{label}</span>
+    </div>
+  );
+}
+
+function Section({ title, children, actions }: { title: string; children: React.ReactNode; actions: React.ReactNode }) {
+  return (
+    <section className="card flex flex-col gap-3">
+      <h2 className="text-lg font-bold">{title}</h2>
+      {children}
+      <div className="mt-auto flex flex-wrap gap-2">{actions}</div>
+    </section>
+  );
+}
+
+const primary = 'btn-primary px-3.5';
+const secondary = 'btn-secondary px-3.5';
+
+/** Pulpit zarządu podzielony na sekcje (jak w prototypie); czerwone liczby = sprawy do załatwienia. */
+export default async function BoardDashboard() {
   const { supabase, member: me } = await requireBoard();
-  const { q = '' } = await searchParams;
-  await supabase.rpc('touch_last_seen');
+  const prevSeen = (await supabase.rpc('touch_last_seen')).data;
+  const now = new Date().toISOString();
+  const today = now.slice(0, 10);
 
-  const [{ data: members }, { data: dues }, { data: declarations }] = await Promise.all([
-    supabase.from('members').select('*').order('member_no'),
-    supabase.from('member_dues_status').select('member_id, months_due'),
-    supabase.from('declarations').select('*').eq('status', 'oczekuje').order('created_at'),
+  const [members, decl, dues, inbox, docs, acks, events, regs, tasks, benefits] = await Promise.all([
+    supabase.from('members').select('id', { count: 'exact', head: true }).eq('status', 'aktywny'),
+    supabase.from('declarations').select('id', { count: 'exact', head: true }).eq('status', 'oczekuje'),
+    supabase.from('member_dues_status').select('months_due'),
+    supabase.from('message_threads').select('id, last_message_at').eq('board_folder', 'aktualne'),
+    supabase
+      .from('documents')
+      .select('id, title')
+      .eq('is_published', true)
+      .eq('requires_ack', true)
+      .order('published_at', { ascending: false })
+      .limit(1),
+    supabase.from('document_acks').select('document_id'),
+    supabase.from('events').select('id, title, starts_at, capacity').eq('is_published', true).gte('starts_at', now).order('starts_at'),
+    supabase.from('event_registrations').select('event_id'),
+    supabase.from('tasks').select('status, due_on'),
+    supabase.from('benefit_requests').select('status'),
   ]);
 
-  const dueById = new Map((dues ?? []).map((d) => [d.member_id, d.months_due ?? 0]));
-  const query = q.trim().toLowerCase();
-  const list = (members ?? []).filter(
-    (m) => !query || m.member_no.toLowerCase().includes(query) || `${m.first_name} ${m.last_name}`.toLowerCase().includes(query),
-  );
-  const activeCount = (members ?? []).filter((m) => m.status === 'aktywny').length;
+  const activeCount = members.count ?? 0;
+  const arrears = (dues.data ?? []).filter((d) => (d.months_due ?? 0) > 0).length;
+  const newMessages = inbox.data?.length ?? 0;
+  const newSinceLogin = prevSeen ? (inbox.data ?? []).filter((t) => t.last_message_at > prevSeen).length : newMessages;
+  const lastAckDoc = docs.data?.[0];
+  const lastAckCount = lastAckDoc ? (acks.data ?? []).filter((a) => a.document_id === lastAckDoc.id).length : 0;
+  const nextEvent = events.data?.[0];
+  const nextEventRegs = nextEvent ? (regs.data ?? []).filter((r) => r.event_id === nextEvent.id).length : 0;
+  const openTasks = (tasks.data ?? []).filter((t) => t.status === 'w_toku').length;
+  const lateTasks = (tasks.data ?? []).filter((t) => t.status === 'w_toku' && t.due_on && t.due_on < today).length;
+  const pendingBenefits = (benefits.data ?? []).filter((b) => b.status === 'zgloszony').length;
+  const activeBenefits = (benefits.data ?? []).filter((b) => b.status === 'przyznany').length;
 
   return (
-    <div className="min-h-screen">
-      <AppHeader member={me} area="zarzad" />
-      <BoardNav current="/zarzad" />
-      <main className="mx-auto flex max-w-[1360px] flex-col gap-6 px-6 py-6">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div className="flex flex-col gap-1">
-            <h1 className="text-[28px] font-bold">Członkowie i konta</h1>
-            <p className="text-ink-muted">
-              Aktywnych członków: {activeCount} · deklaracji do rozpatrzenia: {declarations?.length ?? 0}
+    <BoardShell member={me} current="/zarzad">
+      <div className="flex flex-col gap-1">
+        <h1 className="text-[28px] font-bold">Pulpit zarządu</h1>
+        <span className="text-ink-muted">
+          {prevSeen ? `Ostatnie logowanie: ${formatDateTime(prevSeen)}` : 'Pierwsze logowanie'} · czerwona liczba oznacza sprawę do
+          załatwienia
+        </span>
+      </div>
+
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-4">
+        <Section
+          title="Członkowie"
+          actions={
+            <>
+              <a href="/zarzad/czlonkowie#dek" className={decl.count ? primary : secondary}>
+                Deklaracje
+              </a>
+              <a href="/zarzad/czlonkowie" className={secondary}>
+                Lista członków
+              </a>
+            </>
+          }
+        >
+          <div className="flex flex-wrap gap-6">
+            <Stat value={activeCount} label="aktywnych członków" />
+            <Stat value={decl.count ?? 0} label="deklaracji do rozpatrzenia" alert={(decl.count ?? 0) > 0} />
+          </div>
+        </Section>
+
+        <Section
+          title="Składki"
+          actions={
+            <a href="/zarzad/czlonkowie" className={secondary}>
+              Przejdź do członków
+            </a>
+          }
+        >
+          <div className="flex flex-wrap gap-6">
+            <Stat value={arrears} label="osób z zaległością" alert={arrears > 0} />
+          </div>
+          <p className="text-[15px] text-ink-soft">Wpłaty wpisuje się na karcie członka (kliknij nazwisko na liście).</p>
+        </Section>
+
+        <Section
+          title="Komunikacja"
+          actions={
+            <>
+              <a href="/zarzad/wiadomosci" className={newMessages ? primary : secondary}>
+                Wiadomości
+              </a>
+              <a href="/zarzad/dokumenty" className={secondary}>
+                Dokumenty
+              </a>
+            </>
+          }
+        >
+          <div className="flex flex-wrap gap-6">
+            <Stat value={newMessages} label="nowych wiadomości" alert={newMessages > 0} />
+          </div>
+          {prevSeen && newSinceLogin > 0 && (
+            <p className="text-[15px] text-ink-soft">Od ostatniego logowania: {newSinceLogin}</p>
+          )}
+          {lastAckDoc && (
+            <p className="text-[15px] text-ink-soft">
+              Potwierdzenia odczytu „{lastAckDoc.title}”: {lastAckCount} z {activeCount}
             </p>
-          </div>
-          <a href={`/zarzad/eksport${q ? `?q=${encodeURIComponent(q)}` : ''}`} className="btn-secondary" download>
-            Eksport listy (CSV / Excel)
-          </a>
-        </div>
+          )}
+        </Section>
 
-        {(declarations?.length ?? 0) > 0 && (
-          <section className="flex flex-col gap-3" aria-labelledby="dek">
-            <h2 id="dek" className="text-xl font-bold">
-              Deklaracje członkowskie
-            </h2>
-            {declarations!.map((d) => (
-              <div key={d.id} className="card flex flex-col gap-3">
-                <div className="flex flex-col gap-1">
-                  <span className="text-lg font-bold">
-                    {d.first_name} {d.last_name}
-                  </span>
-                  <span className="text-ink-soft">{[d.unit, d.position].filter(Boolean).join(' · ') || '–'}</span>
-                  <span className="text-sm text-ink-muted">
-                    Złożona {formatDate(d.created_at)} · {d.email}
-                  </span>
-                </div>
-                <div className="flex flex-wrap items-end gap-3">
-                  <ApproveDeclarationForm declarationId={d.id} />
-                  <form action={rejectDeclaration}>
-                    <input type="hidden" name="declaration_id" value={d.id} />
-                    <button type="submit" className="btn-secondary">
-                      Odrzuć
-                    </button>
-                  </form>
-                </div>
-              </div>
-            ))}
-          </section>
-        )}
-
-        <section className="card flex flex-col gap-3" aria-labelledby="nowy">
-          <h2 id="nowy" className="text-lg font-bold">
-            Dodaj członka
-          </h2>
-          <AddMemberForm />
-        </section>
-
-        <section className="flex flex-col gap-3" aria-labelledby="lista">
-          <h2 id="lista" className="sr-only">
-            Lista członków
-          </h2>
-          <form className="flex max-w-[420px] flex-col gap-1.5" role="search">
-            <label htmlFor="q" className="label">
-              Szukaj po nazwisku lub numerze
-            </label>
-            <div className="flex gap-2">
-              <input id="q" name="q" type="search" defaultValue={q} className="field" />
-              <button type="submit" className="btn-secondary">
-                Szukaj
-              </button>
+        <Section
+          title="Wydarzenia"
+          actions={
+            <a href="/zarzad/wydarzenia" className={secondary}>
+              Wydarzenia
+            </a>
+          }
+        >
+          {nextEvent ? (
+            <div className="flex flex-col gap-1">
+              <span className="font-semibold">{nextEvent.title}</span>
+              <span className="text-[15px] text-ink-soft">
+                {formatDateTime(nextEvent.starts_at)} · zapisanych {nextEventRegs}
+                {nextEvent.capacity ? ` z ${nextEvent.capacity}` : ''}
+              </span>
+              {(events.data?.length ?? 0) > 1 && (
+                <span className="text-sm text-ink-muted">+ {(events.data?.length ?? 0) - 1} kolejnych zaplanowanych</span>
+              )}
             </div>
-          </form>
-          <div className="overflow-x-auto rounded-[10px] border border-line bg-white">
-            <table className="w-full min-w-[860px] border-collapse">
-              <thead>
-                <tr className="text-left text-sm text-ink-muted">
-                  <th className="px-4 py-3.5 font-semibold">Nr</th>
-                  <th className="px-3 py-3.5 font-semibold">Imię i nazwisko</th>
-                  <th className="px-3 py-3.5 font-semibold">Rola</th>
-                  <th className="px-3 py-3.5 font-semibold">Data przyjęcia</th>
-                  <th className="px-3 py-3.5 font-semibold">Składki</th>
-                  <th className="px-3 py-3.5 font-semibold">Konto</th>
-                  <th className="px-4 py-3.5 font-semibold">Akcje</th>
-                </tr>
-              </thead>
-              <tbody>
-                {list.map((m) => {
-                  const due = dueById.get(m.id) ?? 0;
-                  return (
-                    <tr key={m.id} className="border-t border-[#EDF0F3]">
-                      <td className="px-4 py-2.5 font-semibold">{m.member_no}</td>
-                      <td className="px-3 py-2.5">
-                        <a href={`/zarzad/czlonek/${m.id}`} className="font-semibold text-navy underline">
-                          {m.first_name} {m.last_name}
-                        </a>
-                      </td>
-                      <td className="px-3 py-2.5 text-ink-soft">{m.is_board ? 'Zarząd' : 'Członek'}</td>
-                      <td className="px-3 py-2.5 text-ink-soft">{formatDate(m.joined_at)}</td>
-                      <td className="px-3 py-2.5">
-                        {due === 0 ? (
-                          <span className="chip bg-ok-light py-0.5 text-ok">Opłacone</span>
-                        ) : (
-                          <span className="chip bg-warn-light py-0.5 text-warn">Zaległość {due} mies.</span>
-                        )}
-                      </td>
-                      <td className="px-3 py-2.5 font-semibold">
-                        {m.status === 'aktywny' ? (
-                          <span className="text-ok">Aktywne</span>
-                        ) : (
-                          <span className="text-[#9B1C1C]">Zablokowane</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-1.5">
-                        <div className="flex flex-wrap items-center gap-1.5">
-                          <ResetPasswordButton memberId={m.id} />
-                          {m.is_board && m.id !== me.id && (
-                            <form action={resetTwoFactor}>
-                              <input type="hidden" name="member_id" value={m.id} />
-                              <button type="submit" className="btn-secondary px-2.5 text-sm">
-                                Reset 2FA
-                              </button>
-                            </form>
-                          )}
-                          {m.id !== me.id && (
-                            <form action={toggleBlock}>
-                              <input type="hidden" name="member_id" value={m.id} />
-                              <button type="submit" className="btn-secondary px-2.5 text-sm">
-                                {m.status === 'aktywny' ? 'Zablokuj' : 'Odblokuj'}
-                              </button>
-                            </form>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-                {list.length === 0 && (
-                  <tr>
-                    <td colSpan={7} className="px-4 py-6 text-ink-muted">
-                      Brak członków spełniających kryteria.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+          ) : (
+            <p className="text-ink-muted">Brak zaplanowanych wydarzeń.</p>
+          )}
+        </Section>
+
+        <Section
+          title="Zadania"
+          actions={
+            <a href="/zarzad/zadania" className={lateTasks ? primary : secondary}>
+              Przejdź do zadań
+            </a>
+          }
+        >
+          <div className="flex flex-wrap gap-6">
+            <Stat value={openTasks} label="otwartych" />
+            <Stat value={lateTasks} label="po terminie" alert={lateTasks > 0} />
           </div>
-        </section>
-      </main>
-    </div>
+        </Section>
+
+        <Section
+          title="Benefity"
+          actions={
+            <a href="/zarzad/benefity" className={pendingBenefits ? primary : secondary}>
+              Przejdź do benefitów
+            </a>
+          }
+        >
+          <div className="flex flex-wrap gap-6">
+            <Stat value={pendingBenefits} label="zgłoszeń do potwierdzenia" alert={pendingBenefits > 0} />
+            <Stat value={activeBenefits} label="aktywnych benefitów" />
+          </div>
+        </Section>
+      </div>
+    </BoardShell>
   );
 }

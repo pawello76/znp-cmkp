@@ -1,5 +1,4 @@
-import { AppHeader } from '@/components/app-header';
-import { MemberNav } from '@/components/member-nav';
+import { MemberShell } from '@/components/shell';
 import { formatDate } from '@/lib/format';
 import { requireMember } from '@/lib/session';
 import { markAllNewsRead, markNewsRead } from './actions';
@@ -23,10 +22,7 @@ export default async function NewsPage() {
   const unread = (news ?? []).filter(isUnread).length;
 
   return (
-    <div className="min-h-screen">
-      <AppHeader member={member} area="czlonek" />
-      <MemberNav current="/aktualnosci" />
-      <main className="mx-auto flex max-w-[1360px] flex-col gap-4 px-6 py-6">
+    <MemberShell member={member} current="/aktualnosci">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-col gap-1">
             <h1 className="text-[28px] font-bold">Aktualności</h1>
@@ -78,7 +74,6 @@ export default async function NewsPage() {
           );
         })}
         {(news ?? []).length === 0 && <p className="text-ink-muted">Brak aktualności.</p>}
-      </main>
-    </div>
+    </MemberShell>
   );
 }

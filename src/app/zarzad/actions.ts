@@ -1,14 +1,15 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { generateTempPassword, isValidMemberNo, memberNoToEmail, normalizeMemberNo } from '@/lib/auth';
+import { generateTempPassword, isValidLogin, isValidMemberNo, loginToEmail, normalizeLogin, normalizeMemberNo } from '@/lib/auth';
 import { requireBoard } from '@/lib/session';
 import { createAdminClient } from '@/lib/supabase/admin';
 
-export type AccountResult = { error?: string; created?: { name: string; memberNo: string; tempPassword: string } };
+export type AccountResult = { error?: string; created?: { name: string; login: string; tempPassword: string } };
 
 type NewMember = {
-  memberNo: string;
+  login: string;
+  memberNo: string | null;
   firstName: string;
   lastName: string;
   email: string | null;
@@ -23,31 +24,44 @@ const text = (v: FormDataEntryValue | null) => {
   return s.length ? s : null;
 };
 
+function refreshMembers() {
+  revalidatePath('/zarzad');
+  revalidatePath('/zarzad/czlonkowie');
+}
+
 /** Tworzy konto w Auth (klucz tajny) i wiersz członka (jako zarząd – trafia do dziennika). */
 async function createAccount(input: NewMember): Promise<{ id?: string; tempPassword?: string; error?: string }> {
   const { supabase, member: actor } = await requireBoard();
 
-  if (!isValidMemberNo(input.memberNo)) return { error: 'Numer członkowski może zawierać litery, cyfry, „-” i „/” (do 20 znaków).' };
-  const memberNo = normalizeMemberNo(input.memberNo);
+  if (!isValidLogin(input.login)) return { error: 'Login musi składać się z 4–15 cyfr.' };
+  const login = normalizeLogin(input.login);
+  if (input.memberNo && !isValidMemberNo(input.memberNo))
+    return { error: 'Numer członkowski może zawierać litery, cyfry, „-” i „/” (do 20 znaków).' };
+  const memberNo = input.memberNo ? normalizeMemberNo(input.memberNo) : null;
 
-  const { data: taken } = await supabase.from('members').select('id').eq('member_no', memberNo).maybeSingle();
-  if (taken) return { error: `Numer ${memberNo} jest już przypisany innemu członkowi.` };
+  const { data: loginTaken } = await supabase.from('members').select('id').eq('login', login).maybeSingle();
+  if (loginTaken) return { error: `Login ${login} jest już używany przez innego członka.` };
+  if (memberNo) {
+    const { data: noTaken } = await supabase.from('members').select('id').eq('member_no', memberNo).maybeSingle();
+    if (noTaken) return { error: `Numer członkowski ${memberNo} jest już przypisany innemu członkowi.` };
+  }
 
   const admin = createAdminClient();
   const tempPassword = generateTempPassword();
   const { data: created, error: authError } = await admin.auth.admin.createUser({
-    email: memberNoToEmail(memberNo),
+    email: loginToEmail(login),
     password: tempPassword,
     email_confirm: true,
-    app_metadata: { member_no: memberNo, created_by: actor.id },
+    app_metadata: { created_by: actor.id },
   });
   if (authError || !created.user) {
-    if (authError?.code === 'email_exists') return { error: `Numer ${memberNo} jest już przypisany innemu kontu.` };
+    if (authError?.code === 'email_exists') return { error: `Login ${login} jest już używany.` };
     return { error: 'Nie udało się utworzyć konta. Spróbuj ponownie.' };
   }
 
   const { error: insertError } = await supabase.from('members').insert({
     id: created.user.id,
+    login,
     member_no: memberNo,
     first_name: input.firstName,
     last_name: input.lastName,
@@ -68,11 +82,12 @@ async function createAccount(input: NewMember): Promise<{ id?: string; tempPassw
 export async function addMember(_prev: AccountResult, formData: FormData): Promise<AccountResult> {
   const firstName = text(formData.get('first_name'));
   const lastName = text(formData.get('last_name'));
-  const memberNo = text(formData.get('member_no'));
-  if (!firstName || !lastName || !memberNo) return { error: 'Wpisz numer członkowski, imię i nazwisko.' };
+  const login = text(formData.get('login'));
+  if (!firstName || !lastName || !login) return { error: 'Wpisz login, imię i nazwisko.' };
 
   const result = await createAccount({
-    memberNo,
+    login,
+    memberNo: text(formData.get('member_no')),
     firstName,
     lastName,
     email: text(formData.get('email')),
@@ -83,21 +98,22 @@ export async function addMember(_prev: AccountResult, formData: FormData): Promi
   });
   if (result.error || !result.tempPassword) return { error: result.error };
 
-  revalidatePath('/zarzad');
-  return { created: { name: `${firstName} ${lastName}`, memberNo: normalizeMemberNo(memberNo), tempPassword: result.tempPassword } };
+  refreshMembers();
+  return { created: { name: `${firstName} ${lastName}`, login: normalizeLogin(login), tempPassword: result.tempPassword } };
 }
 
 export async function approveDeclaration(_prev: AccountResult, formData: FormData): Promise<AccountResult> {
   const { supabase, member: actor } = await requireBoard();
   const declarationId = String(formData.get('declaration_id') ?? '');
-  const memberNo = text(formData.get('member_no'));
-  if (!memberNo) return { error: 'Wpisz numer członkowski.' };
+  const login = text(formData.get('login'));
+  if (!login) return { error: 'Wpisz login.' };
 
   const { data: d } = await supabase.from('declarations').select('*').eq('id', declarationId).maybeSingle();
   if (!d || d.status !== 'oczekuje') return { error: 'Ta deklaracja została już rozpatrzona.' };
 
   const result = await createAccount({
-    memberNo,
+    login,
+    memberNo: text(formData.get('member_no')),
     firstName: d.first_name,
     lastName: d.last_name,
     email: d.email,
@@ -113,8 +129,8 @@ export async function approveDeclaration(_prev: AccountResult, formData: FormDat
     .update({ status: 'zatwierdzona', member_id: result.id, decided_by: actor.id, decided_at: new Date().toISOString() })
     .eq('id', declarationId);
 
-  revalidatePath('/zarzad');
-  return { created: { name: `${d.first_name} ${d.last_name}`, memberNo: normalizeMemberNo(memberNo), tempPassword: result.tempPassword } };
+  refreshMembers();
+  return { created: { name: `${d.first_name} ${d.last_name}`, login: normalizeLogin(login), tempPassword: result.tempPassword } };
 }
 
 export async function rejectDeclaration(formData: FormData) {
@@ -125,7 +141,7 @@ export async function rejectDeclaration(formData: FormData) {
     .update({ status: 'odrzucona', decided_by: actor.id, decided_at: new Date().toISOString() })
     .eq('id', declarationId)
     .eq('status', 'oczekuje');
-  revalidatePath('/zarzad');
+  refreshMembers();
 }
 
 export type ResetResult = { error?: string; tempPassword?: string };
@@ -157,7 +173,7 @@ export async function toggleBlock(formData: FormData) {
   if (error) return;
 
   await supabase.from('members').update({ status: block ? 'zablokowany' : 'aktywny' }).eq('id', memberId);
-  revalidatePath('/zarzad');
+  refreshMembers();
 }
 
 /** Usuwa zarejestrowane aplikacje 2FA członka zarządu (np. po zgubieniu telefonu). */
@@ -172,5 +188,5 @@ export async function resetTwoFactor(formData: FormData) {
     await admin.auth.admin.mfa.deleteFactor({ id: factor.id, userId: memberId });
   }
   await supabase.rpc('log_event', { p_action: 'reset_2fa', p_details: { member_id: memberId } });
-  revalidatePath('/zarzad');
+  refreshMembers();
 }

@@ -1,8 +1,7 @@
-import { AppHeader } from '@/components/app-header';
-import { BoardNav } from '@/components/board-nav';
+import { BoardShell } from '@/components/shell';
 import { formatDate } from '@/lib/format';
 import { requireBoard } from '@/lib/session';
-import { decideRequest, toggleBenefitVisible } from './actions';
+import { decideRequest, setCardNumber, toggleBenefitVisible } from './actions';
 import { AddBenefitForm, EditBenefitForm } from './forms';
 
 export default async function BoardBenefitsPage() {
@@ -13,17 +12,14 @@ export default async function BoardBenefitsPage() {
     supabase.from('benefit_requests').select('*').order('requested_at', { ascending: false }),
     supabase.from('members').select('id, member_no, first_name, last_name'),
   ]);
-  const who = new Map((members ?? []).map((m) => [m.id, `${m.member_no} ${m.first_name} ${m.last_name}`]));
+  const who = new Map((members ?? []).map((m) => [m.id, `${m.first_name} ${m.last_name}${m.member_no ? ` (${m.member_no})` : ''}`]));
   const benefitName = new Map((benefits ?? []).map((b) => [b.id, b.name]));
   const pending = (requests ?? []).filter((r) => r.status === 'zgloszony');
   const active = (requests ?? []).filter((r) => r.status === 'przyznany');
   const usersOf = (id: string) => active.filter((r) => r.benefit_id === id);
 
   return (
-    <div className="min-h-screen">
-      <AppHeader member={me} area="zarzad" />
-      <BoardNav current="/zarzad/benefity" />
-      <main className="mx-auto flex max-w-[1360px] flex-col gap-6 px-6 py-6">
+    <BoardShell member={me} current="/zarzad/benefity">
         <h1 className="text-[28px] font-bold">Benefity</h1>
 
         <section className="card flex flex-col gap-1" aria-labelledby="zgl">
@@ -38,10 +34,16 @@ export default async function BoardBenefitsPage() {
                   {benefitName.get(r.benefit_id)} · zgłoszono {formatDate(r.requested_at)}
                 </span>
               </span>
-              <span className="flex gap-2">
-                <form action={decideRequest}>
+              <span className="flex flex-wrap items-end gap-2">
+                <form action={decideRequest} className="flex flex-wrap items-end gap-2">
                   <input type="hidden" name="request_id" value={r.id} />
                   <input type="hidden" name="decision" value="przyznany" />
+                  <span className="flex flex-col gap-1">
+                    <label htmlFor={`card-${r.id}`} className="text-sm font-semibold">
+                      Nr karty benefitowej
+                    </label>
+                    <input id={`card-${r.id}`} name="card_number" maxLength={64} className="field h-11 w-48" />
+                  </span>
                   <button type="submit" className="btn-primary">
                     Przyznaj
                   </button>
@@ -93,6 +95,16 @@ export default async function BoardBenefitsPage() {
                           <span>
                             {who.get(r.member_id)} · od {r.active_from ? formatDate(r.active_from) : '–'}
                           </span>
+                          <form action={setCardNumber} className="flex items-center gap-1.5">
+                            <input type="hidden" name="request_id" value={r.id} />
+                            <label htmlFor={`cn-${r.id}`} className="text-sm text-ink-muted">
+                              Nr karty
+                            </label>
+                            <input id={`cn-${r.id}`} name="card_number" defaultValue={r.card_number ?? ''} maxLength={64} className="field h-11 w-44" />
+                            <button type="submit" className="btn-secondary px-2.5 text-sm">
+                              Zapisz
+                            </button>
+                          </form>
                           <form action={decideRequest}>
                             <input type="hidden" name="request_id" value={r.id} />
                             <input type="hidden" name="decision" value="zakonczony" />
@@ -120,7 +132,6 @@ export default async function BoardBenefitsPage() {
           </h2>
           <AddBenefitForm />
         </section>
-      </main>
-    </div>
+    </BoardShell>
   );
 }

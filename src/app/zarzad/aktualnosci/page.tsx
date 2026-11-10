@@ -1,5 +1,4 @@
-import { AppHeader } from '@/components/app-header';
-import { BoardNav } from '@/components/board-nav';
+import { BoardShell } from '@/components/shell';
 import { formatDate } from '@/lib/format';
 import { requireBoard } from '@/lib/session';
 import { deleteNews, togglePublishNews } from './actions';
@@ -18,10 +17,7 @@ export default async function BoardNewsPage() {
   for (const r of reads ?? []) readCount.set(r.news_id, (readCount.get(r.news_id) ?? 0) + 1);
 
   return (
-    <div className="min-h-screen">
-      <AppHeader member={me} area="zarzad" />
-      <BoardNav current="/zarzad/aktualnosci" />
-      <main className="mx-auto flex max-w-[1360px] flex-col gap-6 px-6 py-6">
+    <BoardShell member={me} current="/zarzad/aktualnosci">
         <h1 className="text-[28px] font-bold">Aktualności</h1>
 
         <section className="card flex flex-col gap-3" aria-labelledby="nowa">
@@ -64,7 +60,6 @@ export default async function BoardNewsPage() {
           ))}
           {(news ?? []).length === 0 && <p className="text-ink-muted">Brak aktualności.</p>}
         </section>
-      </main>
-    </div>
+    </BoardShell>
   );
 }

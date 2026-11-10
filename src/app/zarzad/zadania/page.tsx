@@ -1,5 +1,4 @@
-import { AppHeader } from '@/components/app-header';
-import { BoardNav } from '@/components/board-nav';
+import { BoardShell } from '@/components/shell';
 import { formatDate } from '@/lib/format';
 import { requireBoard } from '@/lib/session';
 import { deleteTask, setTaskDone } from './actions';
@@ -16,13 +15,10 @@ export default async function BoardTasksPage() {
   const byId = new Map((members ?? []).map((m) => [m.id, m]));
   const people = (members ?? [])
     .filter((m) => m.status === 'aktywny')
-    .map((m) => ({ id: m.id, label: `${m.first_name} ${m.last_name} (${m.member_no})`, board: m.is_board }));
+    .map((m) => ({ id: m.id, label: `${m.first_name} ${m.last_name}${m.member_no ? ` (${m.member_no})` : ''}`, board: m.is_board }));
 
   return (
-    <div className="min-h-screen">
-      <AppHeader member={me} area="zarzad" />
-      <BoardNav current="/zarzad/zadania" />
-      <main className="mx-auto flex max-w-[1360px] flex-col gap-6 px-6 py-6">
+    <BoardShell member={me} current="/zarzad/zadania">
         <h1 className="text-[28px] font-bold">Zadania</h1>
         <section className="card flex flex-col gap-3" aria-labelledby="nowe">
           <h2 id="nowe" className="text-lg font-bold">
@@ -70,7 +66,6 @@ export default async function BoardTasksPage() {
           })}
           {(tasks ?? []).length === 0 && <p className="py-3 text-ink-muted">Brak zadań.</p>}
         </section>
-      </main>
-    </div>
+    </BoardShell>
   );
 }

@@ -177,6 +177,7 @@ export type Database = {
         Row: {
           active_from: string | null
           benefit_id: string
+          card_number: string | null
           created_at: string
           decided_at: string | null
           decided_by: string | null
@@ -190,6 +191,7 @@ export type Database = {
         Insert: {
           active_from?: string | null
           benefit_id: string
+          card_number?: string | null
           created_at?: string
           decided_at?: string | null
           decided_by?: string | null
@@ -203,6 +205,7 @@ export type Database = {
         Update: {
           active_from?: string | null
           benefit_id?: string
+          card_number?: string | null
           created_at?: string
           decided_at?: string | null
           decided_by?: string | null
@@ -809,7 +812,8 @@ export type Database = {
           joined_at: string
           last_name: string
           last_seen_at: string | null
-          member_no: string
+          login: string
+          member_no: string | null
           must_change_password: boolean
           photo_path: string | null
           position: string | null
@@ -828,7 +832,8 @@ export type Database = {
           joined_at?: string
           last_name: string
           last_seen_at?: string | null
-          member_no: string
+          login: string
+          member_no?: string | null
           must_change_password?: boolean
           photo_path?: string | null
           position?: string | null
@@ -847,7 +852,8 @@ export type Database = {
           joined_at?: string
           last_name?: string
           last_seen_at?: string | null
-          member_no?: string
+          login?: string
+          member_no?: string | null
           must_change_password?: boolean
           photo_path?: string | null
           position?: string | null

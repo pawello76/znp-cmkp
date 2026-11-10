@@ -1,6 +1,5 @@
 import { notFound } from 'next/navigation';
-import { AppHeader } from '@/components/app-header';
-import { BoardNav } from '@/components/board-nav';
+import { BoardShell } from '@/components/shell';
 import { ReplyForm } from '@/components/message-forms';
 import { ThreadView } from '@/components/thread-view';
 import { requireBoard } from '@/lib/session';
@@ -27,10 +26,7 @@ export default async function BoardThreadPage({ params }: { params: Promise<{ id
   const archived = thread.board_folder === 'archiwalne';
 
   return (
-    <div className="min-h-screen">
-      <AppHeader member={me} area="zarzad" />
-      <BoardNav current="/zarzad/wiadomosci" />
-      <main className="mx-auto flex max-w-[900px] flex-col gap-5 px-6 py-6">
+    <BoardShell member={me} current="/zarzad/wiadomosci">
         <a href="/zarzad/wiadomosci" className="self-start font-semibold text-navy">
           ← Wróć do wiadomości
         </a>
@@ -38,7 +34,7 @@ export default async function BoardThreadPage({ params }: { params: Promise<{ id
           <div className="flex flex-col gap-1">
             <h1 className="text-2xl font-bold">{thread.subject}</h1>
             <span className="text-ink-muted">
-              od: {author ? `${author.first_name} ${author.last_name} (${author.member_no})` : 'członek'}
+              od: {author ? `${author.first_name} ${author.last_name}${author.member_no ? ` (${author.member_no})` : ''}` : 'członek'}
             </span>
           </div>
           <form action={setFolder}>
@@ -62,7 +58,6 @@ export default async function BoardThreadPage({ params }: { params: Promise<{ id
           <ReplyForm threadId={id} action={boardReply} label="Odpowiedź zarządu" />
           <p className="text-sm text-ink-muted">Członek zobaczy odpowiedź w zakładce Kontakt, oznaczoną jako nowa.</p>
         </div>
-      </main>
-    </div>
+    </BoardShell>
   );
 }

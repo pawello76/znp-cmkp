@@ -1,5 +1,4 @@
-import { AppHeader } from '@/components/app-header';
-import { MemberNav } from '@/components/member-nav';
+import { MemberShell } from '@/components/shell';
 import { formatDate } from '@/lib/format';
 import { requireMember } from '@/lib/session';
 import { acknowledgeDocument } from './actions';
@@ -23,10 +22,7 @@ export default async function DocumentsPage() {
   const toConfirm = (docs ?? []).filter((d) => d.requires_ack && !ackAt.has(d.id)).length;
 
   return (
-    <div className="min-h-screen">
-      <AppHeader member={member} area="czlonek" />
-      <MemberNav current="/dokumenty" />
-      <main className="mx-auto flex max-w-[1360px] flex-col gap-4 px-6 py-6">
+    <MemberShell member={member} current="/dokumenty">
         <div className="flex flex-col gap-1">
           <h1 className="text-[28px] font-bold">Dokumenty</h1>
           <span className="text-ink-muted">
@@ -65,7 +61,6 @@ export default async function DocumentsPage() {
           );
         })}
         {(docs ?? []).length === 0 && <p className="text-ink-muted">Brak opublikowanych dokumentów.</p>}
-      </main>
-    </div>
+    </MemberShell>
   );
 }

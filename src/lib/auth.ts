@@ -5,18 +5,29 @@ export const LOGIN_DOMAIN = 'login.znp-cmkp.invalid';
 
 export const PASSWORD_MIN_LENGTH = 10;
 
+/** Login = same cyfry; ujednolica zapis z prefiksem kraju (+48 / 0048) i odstępami. */
+export function normalizeLogin(raw: string): string {
+  let digits = raw.replace(/\D/g, '');
+  if (digits.length === 11 && digits.startsWith('48')) digits = digits.slice(2);
+  else if (digits.length === 13 && digits.startsWith('0048')) digits = digits.slice(4);
+  return digits;
+}
+
+export function isValidLogin(raw: string): boolean {
+  return /^[0-9]{4,15}$/.test(normalizeLogin(raw));
+}
+
+/** Login → techniczny adres w Supabase Auth (członek go nie widzi). */
+export function loginToEmail(raw: string): string {
+  return `l-${normalizeLogin(raw)}@${LOGIN_DOMAIN}`;
+}
+
 export function normalizeMemberNo(raw: string): string {
   return raw.trim().toUpperCase();
 }
 
 export function isValidMemberNo(raw: string): boolean {
   return /^[0-9A-Za-z/-]{1,20}$/.test(raw.trim());
-}
-
-/** Numer członkowski → techniczny login w Supabase Auth (członek go nie widzi). */
-export function memberNoToEmail(raw: string): string {
-  const local = normalizeMemberNo(raw).toLowerCase().replace(/\//g, '_');
-  return `m-${local}@${LOGIN_DOMAIN}`;
 }
 
 /** Hasło tymczasowe: 12 znaków bez mylących liter (0/O, 1/l/I). */

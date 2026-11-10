@@ -2,11 +2,24 @@ import Link from 'next/link';
 
 export type NavItem = { href: string; label: string; badge?: number };
 
-/** Wspólny pasek zakładek (członek i zarząd) z licznikami „do załatwienia”. */
-export function NavList({ items, current, label }: { items: NavItem[]; current: string; label: string }) {
+/** Boczne menu (jak w prototypie): aktywna pozycja na granatowo, czerwone liczniki spraw do załatwienia. */
+export function NavList({
+  items,
+  current,
+  label,
+  footer,
+}: {
+  items: NavItem[];
+  current: string;
+  label: string;
+  footer?: React.ReactNode;
+}) {
   return (
-    <nav aria-label={label} className="no-print border-b border-line bg-white">
-      <ul className="mx-auto flex max-w-[1360px] flex-wrap gap-1 px-6">
+    <nav
+      aria-label={label}
+      className="no-print flex flex-[1_1_220px] flex-col gap-1 rounded-[10px] border border-line bg-white p-2 md:sticky md:top-6"
+    >
+      <ul className="flex flex-col gap-1">
         {items.map((item) => {
           const active = item.href === current;
           return (
@@ -14,13 +27,16 @@ export function NavList({ items, current, label }: { items: NavItem[]; current: 
               <Link
                 href={item.href}
                 aria-current={active ? 'page' : undefined}
-                className={`inline-flex min-h-[44px] items-center gap-1.5 border-b-[3px] px-3 font-semibold ${
-                  active ? 'border-navy text-navy' : 'border-transparent text-ink-soft hover:text-navy'
+                className={`flex min-h-[44px] w-full items-center justify-between gap-2 rounded-lg px-3.5 text-base ${
+                  active ? 'bg-navy font-semibold text-white' : 'text-ink hover:bg-page'
                 }`}
               >
-                {item.label}
+                <span>{item.label}</span>
                 {item.badge ? (
-                  <span className="rounded-full bg-accent px-2 text-xs font-bold text-white" aria-label={`${item.badge} do załatwienia`}>
+                  <span
+                    className={`rounded-full px-2 text-[13px] font-bold ${active ? 'bg-white text-navy' : 'bg-accent text-white'}`}
+                    aria-label={`${item.badge} do załatwienia`}
+                  >
                     {item.badge}
                   </span>
                 ) : null}
@@ -29,6 +45,7 @@ export function NavList({ items, current, label }: { items: NavItem[]; current: 
           );
         })}
       </ul>
+      {footer && <div className="mt-1.5 border-t border-[#EDF0F3] pt-1.5">{footer}</div>}
     </nav>
   );
 }

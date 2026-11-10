@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { NavList } from './nav-list';
 
@@ -18,7 +19,8 @@ export async function BoardNav({ current }: { current: string }) {
       label="Menu zarządu"
       current={current}
       items={[
-        { href: '/zarzad', label: 'Członkowie i konta', badge: decl.count ?? 0 },
+        { href: '/zarzad', label: 'Pulpit' },
+        { href: '/zarzad/czlonkowie', label: 'Członkowie i konta', badge: decl.count ?? 0 },
         { href: '/zarzad/wiadomosci', label: 'Wiadomości', badge: msgs.count ?? 0 },
         { href: '/zarzad/aktualnosci', label: 'Aktualności' },
         { href: '/zarzad/dokumenty', label: 'Dokumenty' },
@@ -26,6 +28,11 @@ export async function BoardNav({ current }: { current: string }) {
         { href: '/zarzad/zadania', label: 'Zadania', badge: late.count ?? 0 },
         { href: '/zarzad/benefity', label: 'Benefity', badge: bens.count ?? 0 },
       ]}
+      footer={
+        <Link href="/" className="flex min-h-[44px] items-center px-3.5 text-[15px] font-semibold text-navy">
+          Podgląd jako członek →
+        </Link>
+      }
     />
   );
 }

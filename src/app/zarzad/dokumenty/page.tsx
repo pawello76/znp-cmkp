@@ -1,5 +1,4 @@
-import { AppHeader } from '@/components/app-header';
-import { BoardNav } from '@/components/board-nav';
+import { BoardShell } from '@/components/shell';
 import { formatDate } from '@/lib/format';
 import { requireBoard } from '@/lib/session';
 import { deleteDocument, togglePublishDocument } from './actions';
@@ -21,10 +20,7 @@ export default async function BoardDocumentsPage() {
   const total = activeCount ?? 0;
 
   return (
-    <div className="min-h-screen">
-      <AppHeader member={me} area="zarzad" />
-      <BoardNav current="/zarzad/dokumenty" />
-      <main className="mx-auto flex max-w-[1360px] flex-col gap-6 px-6 py-6">
+    <BoardShell member={me} current="/zarzad/dokumenty">
         <h1 className="text-[28px] font-bold">Dokumenty</h1>
 
         <section className="card flex flex-col gap-3" aria-labelledby="wgraj">
@@ -96,7 +92,6 @@ export default async function BoardDocumentsPage() {
           })}
           {(docs ?? []).length === 0 && <p className="text-ink-muted">Brak dokumentów.</p>}
         </section>
-      </main>
-    </div>
+    </BoardShell>
   );
 }

@@ -24,13 +24,15 @@ Migracje w `supabase/migrations` (zastosowane w projekcie Supabase):
 3. `…_storage_seed.sql` – prywatne miejsca na pliki (`photos`, `documents`, `imports`) i dane startowe
 4. `…_members_insert_by_board.sql` – zarząd dodaje członków
 5. `…_log_event.sql` – zapis eksportów i resetów 2FA w dzienniku
+6. `…_login_and_card_number.sql` – login, opcjonalny numer członkowski, numer karty benefitowej
 
 Typy TypeScript bazy: `src/lib/supabase/types.ts` (generowane z projektu).
 
 ## Logowanie
 
-Członek loguje się numerem członkowskim i hasłem. Serwer zamienia numer na techniczny login
-`m-<numer>@login.znp-cmkp.invalid` (domena `.invalid` – poczta nigdy nie jest wysyłana).
+Członek loguje się loginem (same cyfry, ustala zarząd) i hasłem. Serwer zamienia login na techniczny adres
+`l-<login>@login.znp-cmkp.invalid` (domena `.invalid` – poczta nigdy nie jest wysyłana).
+Numer członkowski jest opcjonalny i nadawany przez zarząd później (karta członka).
 Konta zakłada zarząd; hasło tymczasowe trzeba zmienić przy pierwszym logowaniu.
 
 ## Etapy

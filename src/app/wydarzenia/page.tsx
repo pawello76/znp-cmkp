@@ -1,5 +1,4 @@
-import { AppHeader } from '@/components/app-header';
-import { MemberNav } from '@/components/member-nav';
+import { MemberShell } from '@/components/shell';
 import { dayAndMonth, formatDateTime, formatTime } from '@/lib/format';
 import { requireMember } from '@/lib/session';
 import { RegistrationButton } from './registration-button';
@@ -18,10 +17,7 @@ export default async function EventsPage() {
   const countOf = new Map((counts ?? []).map((c) => [c.event_id, Number(c.registered)]));
 
   return (
-    <div className="min-h-screen">
-      <AppHeader member={member} area="czlonek" />
-      <MemberNav current="/wydarzenia" />
-      <main className="mx-auto flex max-w-[1360px] flex-col gap-4 px-6 py-6">
+    <MemberShell member={member} current="/wydarzenia">
         <h1 className="text-[28px] font-bold">Wydarzenia i spotkania</h1>
         {(events ?? []).map((e) => {
           const { day, month } = dayAndMonth(e.starts_at);
@@ -52,7 +48,6 @@ export default async function EventsPage() {
           );
         })}
         {(events ?? []).length === 0 && <p className="text-ink-muted">Brak zaplanowanych wydarzeń.</p>}
-      </main>
-    </div>
+    </MemberShell>
   );
 }

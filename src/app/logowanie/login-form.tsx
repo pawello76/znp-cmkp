@@ -10,10 +10,10 @@ export function LoginForm() {
   return (
     <form action={formAction} className="flex flex-col gap-5" noValidate>
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="member_no" className="label">
-          Numer członkowski
+        <label htmlFor="login" className="label">
+          Login
         </label>
-        <input id="member_no" name="member_no" type="text" autoComplete="username" required className="field" />
+        <input id="login" name="login" type="text" inputMode="numeric" autoComplete="username" required className="field" />
       </div>
       <div className="flex flex-col gap-1.5">
         <label htmlFor="password" className="label">

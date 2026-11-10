@@ -16,23 +16,24 @@ export async function GET(request: NextRequest) {
   const q = (request.nextUrl.searchParams.get('q') ?? '').trim().toLowerCase();
 
   const [{ data: members }, { data: dues }] = await Promise.all([
-    supabase.from('members').select('*').order('member_no'),
+    supabase.from('members').select('*').order('last_name'),
     supabase.from('member_dues_status').select('member_id, paid_until, months_due'),
   ]);
   const dueById = new Map((dues ?? []).map((d) => [d.member_id, d]));
 
   const rows = (members ?? []).filter(
-    (m) => !q || m.member_no.toLowerCase().includes(q) || `${m.first_name} ${m.last_name}`.toLowerCase().includes(q),
+    (m) =>
+      !q || m.login.includes(q) || (m.member_no ?? '').toLowerCase().includes(q) || `${m.first_name} ${m.last_name}`.toLowerCase().includes(q),
   );
 
   const header = [
-    'Numer członkowski', 'Imię', 'Nazwisko', 'Rola', 'Jednostka', 'Stanowisko', 'E-mail',
+    'Login', 'Numer członkowski', 'Imię', 'Nazwisko', 'Rola', 'Jednostka', 'Stanowisko', 'E-mail',
     'Data przyjęcia', 'Legitymacja ważna do', 'Składki opłacone do', 'Zaległość (mies.)', 'Konto',
   ];
   const lines = rows.map((m) => {
     const d = dueById.get(m.id);
     return [
-      m.member_no, m.first_name, m.last_name, m.is_board ? 'Zarząd' : 'Członek', m.unit, m.position, m.email,
+      m.login, m.member_no, m.first_name, m.last_name, m.is_board ? 'Zarząd' : 'Członek', m.unit, m.position, m.email,
       m.joined_at, cardValidUntil(m), d?.paid_until?.slice(0, 7) ?? '', d?.months_due ?? 0, STATUS[m.status] ?? m.status,
     ].map(cell).join(';');
   });

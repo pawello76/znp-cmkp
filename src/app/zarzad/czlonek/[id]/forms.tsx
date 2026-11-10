@@ -48,6 +48,14 @@ export function EditMemberForm({ member, isSelf }: { member: Member; isSelf: boo
     <form action={action} className="flex flex-col gap-4">
       <input type="hidden" name="member_id" value={member.id} />
       <div className="flex flex-wrap gap-3">
+        <Field id="e-login" label="Login" grow="1_1_160px">
+          <input id="e-login" name="login" defaultValue={member.login} required inputMode="numeric" className="field" />
+        </Field>
+        <Field id="e-no" label="Numer członkowski" grow="1_1_160px">
+          <input id="e-no" name="member_no" defaultValue={member.member_no ?? ''} placeholder="do nadania" className="field" />
+        </Field>
+      </div>
+      <div className="flex flex-wrap gap-3">
         <Field id="e-first" label="Imię">
           <input id="e-first" name="first_name" defaultValue={member.first_name} required className="field" />
         </Field>

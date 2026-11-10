@@ -1,6 +1,5 @@
 import { notFound } from 'next/navigation';
-import { AppHeader } from '@/components/app-header';
-import { BoardNav } from '@/components/board-nav';
+import { BoardShell } from '@/components/shell';
 import { formatAmount, formatDate, formatMonth } from '@/lib/format';
 import { cardValidUntil, requireBoard } from '@/lib/session';
 import { deletePayment } from './actions';
@@ -25,18 +24,16 @@ export default async function MemberEditPage({ params }: { params: Promise<{ id:
   const monthsDue = dues?.months_due ?? 0;
 
   return (
-    <div className="min-h-screen">
-      <AppHeader member={me} area="zarzad" />
-      <BoardNav current="/zarzad" />
-      <main className="mx-auto flex max-w-[1360px] flex-col gap-6 px-6 py-6">
-        <a href="/zarzad" className="self-start font-semibold text-navy">
+    <BoardShell member={me} current="/zarzad/czlonkowie">
+        <a href="/zarzad/czlonkowie" className="self-start font-semibold text-navy">
           ← Wróć do listy członków
         </a>
         <div className="flex flex-wrap items-center gap-3">
           <h1 className="text-[28px] font-bold">
             {m.first_name} {m.last_name}
           </h1>
-          <span className="chip bg-navy-light text-navy">nr {m.member_no}</span>
+          <span className="chip bg-navy-light text-navy">login {m.login}</span>
+          {m.member_no && <span className="chip bg-navy-light text-navy">nr {m.member_no}</span>}
           {monthsDue === 0 ? (
             <span className="chip bg-ok-light text-ok">
               Składki opłacone{dues?.paid_until ? ` do ${formatMonth(dues.paid_until)}` : ''}
@@ -51,9 +48,7 @@ export default async function MemberEditPage({ params }: { params: Promise<{ id:
           <h2 id="dane" className="text-lg font-bold">
             Dane członka
           </h2>
-          <p className="text-sm text-ink-muted">
-            Numeru członkowskiego nie zmienia się, bo służy do logowania.
-          </p>
+          <p className="text-sm text-ink-muted">Zmiana loginu działa od razu: członek loguje się nowym loginem i dotychczasowym hasłem.</p>
           <EditMemberForm member={m} isSelf={m.id === me.id} />
         </section>
 
@@ -109,7 +104,6 @@ export default async function MemberEditPage({ params }: { params: Promise<{ id:
           </div>
           <p className="text-sm text-ink-muted">Każde dodanie i usunięcie wpłaty trafia do dziennika zmian.</p>
         </section>
-      </main>
-    </div>
+    </BoardShell>
   );
 }

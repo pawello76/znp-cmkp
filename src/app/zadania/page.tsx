@@ -1,6 +1,5 @@
 import { revalidatePath } from 'next/cache';
-import { AppHeader } from '@/components/app-header';
-import { MemberNav } from '@/components/member-nav';
+import { MemberShell } from '@/components/shell';
 import { formatDate } from '@/lib/format';
 import { requireMember } from '@/lib/session';
 
@@ -27,10 +26,7 @@ export default async function MyTasksPage() {
   const today = new Date().toISOString().slice(0, 10);
 
   return (
-    <div className="min-h-screen">
-      <AppHeader member={member} area="czlonek" />
-      <MemberNav current="/zadania" />
-      <main className="mx-auto flex max-w-[1360px] flex-col gap-4 px-6 py-6">
+    <MemberShell member={member} current="/zadania">
         <h1 className="text-[28px] font-bold">Moje zadania</h1>
         <p className="text-ink-muted">Zadania przypisane Ci przez zarząd. Oznacz wykonane, a zarząd zobaczy zmianę.</p>
         {(tasks ?? []).map((t) => {
@@ -60,7 +56,6 @@ export default async function MyTasksPage() {
           );
         })}
         {(tasks ?? []).length === 0 && <p className="text-ink-muted">Nie masz przypisanych zadań.</p>}
-      </main>
-    </div>
+    </MemberShell>
   );
 }

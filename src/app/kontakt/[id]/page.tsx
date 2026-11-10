@@ -1,6 +1,5 @@
 import { notFound } from 'next/navigation';
-import { AppHeader } from '@/components/app-header';
-import { MemberNav } from '@/components/member-nav';
+import { MemberShell } from '@/components/shell';
 import { ReplyForm } from '@/components/message-forms';
 import { ThreadView } from '@/components/thread-view';
 import { requireMember } from '@/lib/session';
@@ -24,10 +23,7 @@ export default async function MemberThreadPage({ params }: { params: Promise<{ i
   const names = new Map((board ?? []).map((b) => [b.member_id, `${b.first_name} ${b.last_name}${b.roles.length ? `, ${b.roles[0]}` : ''}`]));
 
   return (
-    <div className="min-h-screen">
-      <AppHeader member={member} area="czlonek" />
-      <MemberNav current="/kontakt" />
-      <main className="mx-auto flex max-w-[900px] flex-col gap-5 px-6 py-6">
+    <MemberShell member={member} current="/kontakt">
         <a href="/kontakt" className="self-start font-semibold text-navy">
           ← Wróć do wiadomości
         </a>
@@ -40,7 +36,6 @@ export default async function MemberThreadPage({ params }: { params: Promise<{ i
         <div className="card">
           <ReplyForm threadId={id} />
         </div>
-      </main>
-    </div>
+    </MemberShell>
   );
 }

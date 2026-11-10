@@ -1,6 +1,5 @@
 import Link from 'next/link';
-import { AppHeader } from '@/components/app-header';
-import { BoardNav } from '@/components/board-nav';
+import { BoardShell } from '@/components/shell';
 import { formatDateTime } from '@/lib/format';
 import { requireBoard } from '@/lib/session';
 
@@ -21,16 +20,13 @@ export default async function BoardMessagesPage({ searchParams }: { searchParams
     supabase.from('members').select('id, member_no, first_name, last_name'),
     supabase.from('board_roles').select('id, name'),
   ]);
-  const who = new Map((members ?? []).map((m) => [m.id, `${m.first_name} ${m.last_name} (${m.member_no})`]));
+  const who = new Map((members ?? []).map((m) => [m.id, `${m.first_name} ${m.last_name}${m.member_no ? ` (${m.member_no})` : ''}`]));
   const roleName = new Map((roles ?? []).map((r) => [r.id, r.name]));
   const counts = Object.fromEntries(FOLDERS.map((f) => [f.id, (threads ?? []).filter((t) => t.board_folder === f.id).length]));
   const list = (threads ?? []).filter((t) => t.board_folder === folder);
 
   return (
-    <div className="min-h-screen">
-      <AppHeader member={me} area="zarzad" />
-      <BoardNav current="/zarzad/wiadomosci" />
-      <main className="mx-auto flex max-w-[1360px] flex-col gap-4 px-6 py-6">
+    <BoardShell member={me} current="/zarzad/wiadomosci">
         <h1 className="text-[28px] font-bold">Wiadomości od członków</h1>
         <nav aria-label="Foldery" className="flex flex-wrap gap-2">
           {FOLDERS.map((f) => (
@@ -69,7 +65,6 @@ export default async function BoardMessagesPage({ searchParams }: { searchParams
           </Link>
         ))}
         {list.length === 0 && <p className="text-ink-muted">Brak wiadomości w tym folderze.</p>}
-      </main>
-    </div>
+    </BoardShell>
   );
 }

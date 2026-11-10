@@ -1,6 +1,5 @@
 import Link from 'next/link';
-import { AppHeader } from '@/components/app-header';
-import { MemberNav } from '@/components/member-nav';
+import { MemberShell } from '@/components/shell';
 import { NewThreadForm } from '@/components/message-forms';
 import { formatDate } from '@/lib/format';
 import { requireMember } from '@/lib/session';
@@ -16,10 +15,7 @@ export default async function ContactPage() {
   const roleName = new Map((roles ?? []).map((r) => [r.id, r.name]));
 
   return (
-    <div className="min-h-screen">
-      <AppHeader member={member} area="czlonek" />
-      <MemberNav current="/kontakt" />
-      <main className="mx-auto flex max-w-[1360px] flex-col gap-5 px-6 py-6">
+    <MemberShell member={member} current="/kontakt">
         <h1 className="text-[28px] font-bold">Kontakt z zarządem</h1>
 
         <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-4">
@@ -73,7 +69,6 @@ export default async function ContactPage() {
           </h2>
           <NewThreadForm roles={roles ?? []} />
         </section>
-      </main>
-    </div>
+    </MemberShell>
   );
 }

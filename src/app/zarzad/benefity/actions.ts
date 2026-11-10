@@ -21,7 +21,12 @@ export async function decideRequest(formData: FormData) {
       status,
       decided_by: member.id,
       decided_at: new Date().toISOString(),
-      ...(status === 'przyznany' ? { active_from: new Date().toISOString().slice(0, 10) } : {}),
+      ...(status === 'przyznany'
+        ? {
+            active_from: new Date().toISOString().slice(0, 10),
+            card_number: String(formData.get('card_number') ?? '').trim().slice(0, 64) || null,
+          }
+        : {}),
     })
     .eq('id', String(formData.get('request_id') ?? ''));
   refresh();
@@ -67,4 +72,14 @@ export async function updateBenefit(_prev: BenefitFormState, formData: FormData)
   if (error) return { error: 'Nie udało się zapisać zmian.' };
   refresh();
   return { ok: 'Zapisano.' };
+}
+
+/** Numer karty benefitowej (np. Multisport) – wpisuje lub poprawia zarząd. */
+export async function setCardNumber(formData: FormData) {
+  const { supabase } = await requireBoard();
+  await supabase
+    .from('benefit_requests')
+    .update({ card_number: String(formData.get('card_number') ?? '').trim().slice(0, 64) || null })
+    .eq('id', String(formData.get('request_id') ?? ''));
+  refresh();
 }

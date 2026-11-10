@@ -1,6 +1,5 @@
 import { revalidatePath } from 'next/cache';
-import { AppHeader } from '@/components/app-header';
-import { MemberNav } from '@/components/member-nav';
+import { MemberShell } from '@/components/shell';
 import { formatDate } from '@/lib/format';
 import { requireMember } from '@/lib/session';
 
@@ -32,10 +31,7 @@ export default async function BenefitsPage() {
   });
 
   return (
-    <div className="min-h-screen">
-      <AppHeader member={member} area="czlonek" />
-      <MemberNav current="/benefity" />
-      <main className="mx-auto flex max-w-[1360px] flex-col gap-5 px-6 py-6">
+    <MemberShell member={member} current="/benefity">
         <div className="flex flex-col gap-1">
           <h1 className="text-[28px] font-bold">Korzyści i benefity</h1>
           <p className="text-ink-muted">Listę benefitów prowadzi zarząd. Po zgłoszeniu zarząd potwierdza przyznanie benefitu.</p>
@@ -51,8 +47,15 @@ export default async function BenefitsPage() {
               <div key={b.id} className="flex flex-wrap items-center justify-between gap-3 border-t border-[#EDF0F3] pt-2.5">
                 <span className="font-semibold">{b.name}</span>
                 {r.status === 'przyznany' ? (
-                  <span className="chip bg-ok-light text-ok">
-                    Aktywny{r.active_from ? ` od ${formatDate(r.active_from)}` : ''}
+                  <span className="flex flex-wrap items-center gap-2">
+                    {r.card_number && (
+                      <span className="text-[15px]">
+                        Nr karty: <strong className="font-mono">{r.card_number}</strong>
+                      </span>
+                    )}
+                    <span className="chip bg-ok-light text-ok">
+                      Aktywny{r.active_from ? ` od ${formatDate(r.active_from)}` : ''}
+                    </span>
                   </span>
                 ) : (
                   <span className="chip bg-warn-light text-warn">Zgłoszony · czeka na potwierdzenie zarządu</span>
@@ -91,7 +94,6 @@ export default async function BenefitsPage() {
           })}
         </div>
         {(benefits ?? []).length === 0 && <p className="text-ink-muted">Brak dostępnych benefitów.</p>}
-      </main>
-    </div>
+    </MemberShell>
   );
 }
