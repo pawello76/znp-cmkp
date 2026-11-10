@@ -1,7 +1,7 @@
 # ZNP w CMKP – aplikacja członkowska
 
 Aplikacja webowa dla członków i zarządu ZNP w CMKP: logowanie numerem członkowskim, deklaracje,
-konta, składki, głosowania jawne i tajne, wydarzenia, dokumenty, benefity, wiadomości.
+konta, składki, wydarzenia, dokumenty, aktualności, zadania, benefity, wiadomości.
 
 Specyfikacja (stos, model danych, uprawnienia): dokument „ZNP w CMKP – stos technologiczny i model danych”.
 
@@ -39,5 +39,5 @@ Konta zakłada zarząd; hasło tymczasowe trzeba zmienić przy pierwszym logowan
 - [x] 2. Konta: logowanie, zmiana hasła, deklaracje, lista członków z eksportem, legitymacja ze zdjęciem, 2FA zarządu
 - [x] 3. Składki – wpis ręczny, edycja danych członka (import wyciągu odłożony)
 - [x] 4. Aktualności, dokumenty (potwierdzenia odczytu), wydarzenia (zapisy)
-- [ ] 5. Głosowania, zadania, benefity, wiadomości
+- [x] 5. Zadania, benefity, wiadomości w wątkach (głosowania usunięte z zakresu decyzją zarządu)
 - [ ] 6. Start

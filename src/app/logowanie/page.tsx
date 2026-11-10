@@ -15,7 +15,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
             Panel członkowski
           </h1>
           <p className="text-lg leading-relaxed text-[#DCE5F0]">
-            Głosowania, wydarzenia, dokumenty, legitymacja i składki w jednym miejscu.
+            Aktualności, wydarzenia, dokumenty, legitymacja, składki i kontakt z zarządem w jednym miejscu.
           </p>
         </div>
         <p className="text-sm text-[#C3D1E2]">Centrum Medycznego Kształcenia Podyplomowego · Warszawa</p>

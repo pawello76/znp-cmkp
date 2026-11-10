@@ -6,7 +6,7 @@ const sans = Source_Sans_3({ subsets: ['latin', 'latin-ext'], variable: '--font-
 
 export const metadata: Metadata = {
   title: 'ZNP w CMKP – panel członkowski',
-  description: 'Głosowania, wydarzenia, dokumenty, legitymacja i składki członków ZNP w CMKP.',
+  description: 'Aktualności, wydarzenia, dokumenty, legitymacja i składki członków ZNP w CMKP.',
   robots: { index: false, follow: false },
 };
 

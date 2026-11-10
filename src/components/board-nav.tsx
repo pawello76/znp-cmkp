@@ -1,33 +1,31 @@
-import Link from 'next/link';
+import { createClient } from '@/lib/supabase/server';
+import { NavList } from './nav-list';
 
-const ITEMS = [
-  { href: '/zarzad', label: 'Członkowie i konta' },
-  { href: '/zarzad/aktualnosci', label: 'Aktualności' },
-  { href: '/zarzad/dokumenty', label: 'Dokumenty' },
-  { href: '/zarzad/wydarzenia', label: 'Wydarzenia' },
-];
+/** Menu zarządu z licznikami spraw do załatwienia (powiadomienia po zalogowaniu). */
+export async function BoardNav({ current }: { current: string }) {
+  const supabase = await createClient();
+  const today = new Date().toISOString().slice(0, 10);
 
-export function BoardNav({ current }: { current: string }) {
+  const [decl, msgs, bens, late] = await Promise.all([
+    supabase.from('declarations').select('id', { count: 'exact', head: true }).eq('status', 'oczekuje'),
+    supabase.from('message_threads').select('id', { count: 'exact', head: true }).eq('board_folder', 'aktualne'),
+    supabase.from('benefit_requests').select('id', { count: 'exact', head: true }).eq('status', 'zgloszony'),
+    supabase.from('tasks').select('id', { count: 'exact', head: true }).eq('status', 'w_toku').lt('due_on', today),
+  ]);
+
   return (
-    <nav aria-label="Menu zarządu" className="border-b border-line bg-white">
-      <ul className="mx-auto flex max-w-[1360px] flex-wrap gap-1 px-6">
-        {ITEMS.map((item) => {
-          const active = item.href === current;
-          return (
-            <li key={item.href}>
-              <Link
-                href={item.href}
-                aria-current={active ? 'page' : undefined}
-                className={`inline-flex min-h-[44px] items-center border-b-[3px] px-3 font-semibold ${
-                  active ? 'border-navy text-navy' : 'border-transparent text-ink-soft hover:text-navy'
-                }`}
-              >
-                {item.label}
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
-    </nav>
+    <NavList
+      label="Menu zarządu"
+      current={current}
+      items={[
+        { href: '/zarzad', label: 'Członkowie i konta', badge: decl.count ?? 0 },
+        { href: '/zarzad/wiadomosci', label: 'Wiadomości', badge: msgs.count ?? 0 },
+        { href: '/zarzad/aktualnosci', label: 'Aktualności' },
+        { href: '/zarzad/dokumenty', label: 'Dokumenty' },
+        { href: '/zarzad/wydarzenia', label: 'Wydarzenia' },
+        { href: '/zarzad/zadania', label: 'Zadania', badge: late.count ?? 0 },
+        { href: '/zarzad/benefity', label: 'Benefity', badge: bens.count ?? 0 },
+      ]}
+    />
   );
 }
