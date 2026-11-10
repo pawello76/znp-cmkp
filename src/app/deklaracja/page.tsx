@@ -26,6 +26,15 @@ export default function DeclarationPage() {
               <h1 className="text-[26px] font-bold">Deklaracja członkowska</h1>
               <p className="text-[15px] text-ink-muted">Zarząd rozpatrzy deklarację i nada numer członkowski.</p>
             </div>
+            <div className="flex flex-col gap-3 rounded-lg border border-line bg-page p-4">
+              <p className="leading-relaxed">
+                <strong>Pobierz i wypełnij dokument, dostarcz wypełniony wniosek do zarządu związku.</strong>
+              </p>
+              <a href="/pliki/Deklaracja-ZNP.docx" download className="btn-secondary self-start">
+                Pobierz deklarację ZNP (Word, 54 KB)
+              </a>
+              <p className="text-sm text-ink-muted">Poniżej możesz też zgłosić się przez formularz, żeby zarząd wiedział, że wniosek jest w drodze.</p>
+            </div>
             <div className="grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-3">
               <div className="flex flex-col gap-1.5">
                 <label htmlFor="first_name" className="label">
