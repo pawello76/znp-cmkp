@@ -46,10 +46,16 @@ export default async function BoardBenefitsPage() {
                     <input id={`card-${r.id}`} name="card_number" maxLength={64} className="field h-11 w-48" />
                   </span>
                   <span className="flex flex-col gap-1">
-                    <label htmlFor={`cd-${r.id}`} className="text-sm font-semibold">
-                      Data wydania karty
+                    <label htmlFor={`val-${r.id}`} className="text-sm font-semibold">
+                      Wartość (zł)
                     </label>
-                    <input id={`cd-${r.id}`} name="card_issued_on" type="date" defaultValue={today} className="field h-11 w-44" />
+                    <input id={`val-${r.id}`} name="value" inputMode="decimal" placeholder="np. 77,00" className="field h-11 w-32" />
+                  </span>
+                  <span className="flex flex-col gap-1">
+                    <label htmlFor={`af-${r.id}`} className="text-sm font-semibold">
+                      Aktywny od
+                    </label>
+                    <input id={`af-${r.id}`} name="active_from" type="date" defaultValue={today} required className="field h-11 w-44" />
                   </span>
                   <button type="submit" className="btn-primary">
                     Przyznaj
@@ -80,7 +86,6 @@ export default async function BoardBenefitsPage() {
                   <span className="flex flex-col">
                     <span className="font-bold">{b.name}</span>
                     <span className="text-sm text-ink-muted">
-                      {b.value_grosz != null ? `Wartość ${formatAmount(b.value_grosz)} · ` : ''}
                       {b.is_visible ? 'Widoczny dla członków' : 'Ukryty'} · korzysta: {users.length}
                     </span>
                   </span>
@@ -100,8 +105,11 @@ export default async function BoardBenefitsPage() {
                     <ul className="flex flex-col">
                       {users.map((r) => (
                         <li key={r.id} className="flex flex-wrap items-center justify-between gap-2 border-t border-[#EDF0F3] py-2">
-                          <span>
-                            {who.get(r.member_id)} · od {r.active_from ? formatDate(r.active_from) : '–'}
+                          <span className="flex flex-col">
+                            <span className="font-semibold">{who.get(r.member_id)}</span>
+                            <span className="text-sm text-ink-muted">
+                              {r.value_grosz != null ? `${formatAmount(r.value_grosz)} · ` : ''}aktywny od {r.active_from ? formatDate(r.active_from) : '–'}
+                            </span>
                           </span>
                           <form action={setCardNumber} className="flex flex-wrap items-center gap-1.5">
                             <input type="hidden" name="request_id" value={r.id} />
@@ -109,10 +117,20 @@ export default async function BoardBenefitsPage() {
                               Nr karty
                             </label>
                             <input id={`cn-${r.id}`} name="card_number" defaultValue={r.card_number ?? ''} maxLength={64} className="field h-11 w-44" />
-                            <label htmlFor={`cdt-${r.id}`} className="text-sm text-ink-muted">
-                              wydana
+                            <label htmlFor={`v-${r.id}`} className="text-sm text-ink-muted">
+                              Wartość
                             </label>
-                            <input id={`cdt-${r.id}`} name="card_issued_on" type="date" defaultValue={r.card_issued_on ?? ''} className="field h-11 w-40" />
+                            <input
+                              id={`v-${r.id}`}
+                              name="value"
+                              inputMode="decimal"
+                              defaultValue={r.value_grosz != null ? (r.value_grosz / 100).toFixed(2).replace('.', ',') : ''}
+                              className="field h-11 w-28"
+                            />
+                            <label htmlFor={`a-${r.id}`} className="text-sm text-ink-muted">
+                              od
+                            </label>
+                            <input id={`a-${r.id}`} name="active_from" type="date" defaultValue={r.active_from ?? ''} className="field h-11 w-40" />
                             <button type="submit" className="btn-secondary px-2.5 text-sm">
                               Zapisz
                             </button>

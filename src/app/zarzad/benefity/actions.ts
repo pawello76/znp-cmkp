@@ -36,9 +36,9 @@ export async function decideRequest(formData: FormData) {
       decided_at: new Date().toISOString(),
       ...(status === 'przyznany'
         ? {
-            active_from: new Date().toISOString().slice(0, 10),
+            active_from: parseDate(formData.get('active_from')) ?? new Date().toISOString().slice(0, 10),
             card_number: String(formData.get('card_number') ?? '').trim().slice(0, 64) || null,
-            card_issued_on: parseDate(formData.get('card_issued_on')),
+            value_grosz: parseValue(formData.get('value')) ?? null,
           }
         : {}),
     })
@@ -59,14 +59,12 @@ export async function addBenefit(_prev: BenefitFormState, formData: FormData): P
   const { supabase } = await requireBoard();
   const name = String(formData.get('name') ?? '').trim();
   if (!name) return { error: 'Wpisz nazwę benefitu.' };
-  const value = parseValue(formData.get('value'));
-  if (value === undefined) return { error: 'Wartość podaj jako kwotę, np. 77 lub 77,00.' };
+
   const { count } = await supabase.from('benefits').select('id', { count: 'exact', head: true });
   const { error } = await supabase.from('benefits').insert({
     name: name.slice(0, 200),
     category: String(formData.get('category') ?? '').trim() || null,
     description: String(formData.get('description') ?? '').trim() || null,
-    value_grosz: value,
     sort_order: (count ?? 0) + 1,
   });
   if (error) return { error: 'Nie udało się dodać benefitu.' };
@@ -78,30 +76,29 @@ export async function updateBenefit(_prev: BenefitFormState, formData: FormData)
   const { supabase } = await requireBoard();
   const name = String(formData.get('name') ?? '').trim();
   if (!name) return { error: 'Nazwa nie może być pusta.' };
-  const value = parseValue(formData.get('value'));
-  if (value === undefined) return { error: 'Wartość podaj jako kwotę, np. 77 lub 77,00.' };
+
   const { error } = await supabase
     .from('benefits')
     .update({
       name: name.slice(0, 200),
       category: String(formData.get('category') ?? '').trim() || null,
       description: String(formData.get('description') ?? '').trim() || null,
-      value_grosz: value,
-    })
+      })
     .eq('id', String(formData.get('benefit_id') ?? ''));
   if (error) return { error: 'Nie udało się zapisać zmian.' };
   refresh();
   return { ok: 'Zapisano.' };
 }
 
-/** Numer i data wydania karty benefitowej (np. Multisport) – wpisuje lub poprawia zarząd. */
+/** Wartość, numer karty i data „aktywny od” – wpisuje lub poprawia zarząd. */
 export async function setCardNumber(formData: FormData) {
   const { supabase } = await requireBoard();
   await supabase
     .from('benefit_requests')
     .update({
       card_number: String(formData.get('card_number') ?? '').trim().slice(0, 64) || null,
-      card_issued_on: parseDate(formData.get('card_issued_on')),
+      value_grosz: parseValue(formData.get('value')) ?? null,
+      ...(parseDate(formData.get('active_from')) ? { active_from: parseDate(formData.get('active_from')) } : {}),
     })
     .eq('id', String(formData.get('request_id') ?? ''));
   refresh();

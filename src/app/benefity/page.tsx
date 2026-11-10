@@ -48,7 +48,6 @@ export default async function BenefitsPage() {
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <span className="font-semibold">
                     {b.name}
-                    {b.value_grosz != null && <span className="font-normal text-ink-muted"> · wartość {formatAmount(b.value_grosz)}</span>}
                   </span>
                   {r.status === 'przyznany' ? (
                     <span className="chip bg-ok-light text-ok">
@@ -65,8 +64,12 @@ export default async function BenefitsPage() {
                       <dd className="font-mono text-[17px] font-bold">{r.card_number ?? <span className="font-sans text-[15px] font-normal text-ink-muted">nada zarząd</span>}</dd>
                     </div>
                     <div className="flex flex-col">
-                      <dt className="text-sm text-ink-muted">Data wydania karty</dt>
-                      <dd className="text-[17px] font-bold">{r.card_issued_on ? formatDate(r.card_issued_on) : <span className="text-[15px] font-normal text-ink-muted">–</span>}</dd>
+                      <dt className="text-sm text-ink-muted">Wartość</dt>
+                      <dd className="text-[17px] font-bold">{r.value_grosz != null ? formatAmount(r.value_grosz) : <span className="text-[15px] font-normal text-ink-muted">–</span>}</dd>
+                    </div>
+                    <div className="flex flex-col">
+                      <dt className="text-sm text-ink-muted">Aktywny od</dt>
+                      <dd className="text-[17px] font-bold">{r.active_from ? formatDate(r.active_from) : <span className="text-[15px] font-normal text-ink-muted">–</span>}</dd>
                     </div>
                   </dl>
                 )}
@@ -86,7 +89,6 @@ export default async function BenefitsPage() {
                   <span className="text-[13px] font-bold uppercase tracking-[0.06em] text-ink-muted">{b.category}</span>
                 )}
                 <h2 className="text-xl font-bold">{b.name}</h2>
-                {b.value_grosz != null && <span className="font-semibold text-navy">Wartość: {formatAmount(b.value_grosz)}</span>}
                 {b.description && <p className="whitespace-pre-line leading-relaxed text-ink-soft">{b.description}</p>}
                 {status === 'przyznany' ? (
                   <span className="mt-auto flex flex-col gap-0.5 rounded-lg bg-ok-light p-3 text-ok">
@@ -94,7 +96,8 @@ export default async function BenefitsPage() {
                     <span className="text-[15px] text-ink">
                       Nr karty: <strong className="font-mono">{req?.card_number ?? 'nada zarząd'}</strong>
                     </span>
-                    {req?.card_issued_on && <span className="text-[15px] text-ink">Wydana: {formatDate(req.card_issued_on)}</span>}
+                    {req?.value_grosz != null && <span className="text-[15px] text-ink">Wartość: {formatAmount(req.value_grosz)}</span>}
+                    {req?.active_from && <span className="text-[15px] text-ink">Aktywny od: {formatDate(req.active_from)}</span>}
                   </span>
                 ) : status === 'zgloszony' ? (
                   <span className="mt-auto rounded-lg bg-warn-light p-3 font-semibold text-warn">Zgłoszono · czeka na potwierdzenie</span>
