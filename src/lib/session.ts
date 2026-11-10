@@ -27,9 +27,18 @@ export async function requireMember(options: { allowTempPassword?: boolean } = {
   return { supabase, user, member };
 }
 
-/** Wymaga członka zarządu. */
+/** Wymaga członka zarządu, który potwierdził logowanie kodem 2FA w tej sesji. */
 export async function requireBoard() {
   const ctx = await requireMember();
   if (!ctx.member.is_board) redirect('/');
+
+  const { data: aal } = await ctx.supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+  if (aal?.currentLevel !== 'aal2') redirect('/weryfikacja');
+
   return ctx;
+}
+
+/** Ważność legitymacji: data ustawiona przez zarząd, a domyślnie koniec bieżącego roku. */
+export function cardValidUntil(member: Member): string {
+  return member.card_valid_until ?? `${new Date().getFullYear()}-12-31`;
 }

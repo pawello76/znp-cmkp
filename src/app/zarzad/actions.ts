@@ -159,3 +159,18 @@ export async function toggleBlock(formData: FormData) {
   await supabase.from('members').update({ status: block ? 'zablokowany' : 'aktywny' }).eq('id', memberId);
   revalidatePath('/zarzad');
 }
+
+/** Usuwa zarejestrowane aplikacje 2FA członka zarządu (np. po zgubieniu telefonu). */
+export async function resetTwoFactor(formData: FormData) {
+  const { supabase, member: actor } = await requireBoard();
+  const memberId = String(formData.get('member_id') ?? '');
+  if (memberId === actor.id) return; // własną weryfikację resetuje inny członek zarządu
+
+  const admin = createAdminClient();
+  const { data } = await admin.auth.admin.mfa.listFactors({ userId: memberId });
+  for (const factor of data?.factors ?? []) {
+    await admin.auth.admin.mfa.deleteFactor({ id: factor.id, userId: memberId });
+  }
+  await supabase.rpc('log_event', { p_action: 'reset_2fa', p_details: { member_id: memberId } });
+  revalidatePath('/zarzad');
+}

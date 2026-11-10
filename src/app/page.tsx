@@ -1,6 +1,7 @@
 import { AppHeader } from '@/components/app-header';
 import { formatDate, formatMonth } from '@/lib/format';
-import { requireMember } from '@/lib/session';
+import { MemberNav } from '@/components/member-nav';
+import { cardValidUntil, requireMember } from '@/lib/session';
 
 export default async function MemberHome() {
   const { supabase, member } = await requireMember();
@@ -17,6 +18,7 @@ export default async function MemberHome() {
   return (
     <div className="min-h-screen">
       <AppHeader member={member} area="czlonek" />
+      <MemberNav current="/" />
       <main className="mx-auto flex max-w-[1360px] flex-col gap-5 px-6 py-6">
         <div className="flex flex-col gap-2.5">
           <h1 className="text-[28px] font-bold">Dzień dobry, {member.first_name}</h1>
@@ -30,9 +32,9 @@ export default async function MemberHome() {
                 Zaległość w składkach: {monthsDue} mies.
               </span>
             )}
-            {member.card_valid_until && (
-              <span className="chip bg-navy-light text-navy">Legitymacja ważna do {formatDate(member.card_valid_until)}</span>
-            )}
+            <a href="/legitymacja" className="chip bg-navy-light text-navy">
+              Legitymacja ważna do {formatDate(cardValidUntil(member))}
+            </a>
           </div>
         </div>
 
@@ -54,13 +56,13 @@ export default async function MemberHome() {
               <dd className="font-semibold">{formatDate(member.joined_at)}</dd>
             </div>
           </dl>
-          <a href="/zmiana-hasla" className="self-start font-semibold text-navy underline">
-            Zmień hasło
+          <a href="/legitymacja" className="self-start font-semibold text-navy underline">
+            Otwórz legitymację
           </a>
         </section>
 
         <p className="text-ink-muted">
-          Kolejne moduły (aktualności, legitymacja, głosowania, wydarzenia, dokumenty, benefity, składki, kontakt) pojawią się w
+          Kolejne moduły (aktualności, głosowania, wydarzenia, dokumenty, benefity, składki, kontakt) pojawią się w
           następnych etapach.
         </p>
       </main>

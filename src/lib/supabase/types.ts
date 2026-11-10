@@ -1417,6 +1417,10 @@ export type Database = {
       }
       is_active_member: { Args: never; Returns: boolean }
       is_board: { Args: never; Returns: boolean }
+      log_event: {
+        Args: { p_action: string; p_details?: Json }
+        Returns: undefined
+      }
       mark_password_changed: { Args: never; Returns: undefined }
       poll_named_votes: {
         Args: { p_poll: string }

@@ -1,7 +1,7 @@
 import { AppHeader } from '@/components/app-header';
 import { formatDate } from '@/lib/format';
 import { requireBoard } from '@/lib/session';
-import { rejectDeclaration, toggleBlock } from './actions';
+import { rejectDeclaration, resetTwoFactor, toggleBlock } from './actions';
 import { AddMemberForm, ApproveDeclarationForm, ResetPasswordButton } from './forms';
 
 export default async function BoardPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
@@ -26,11 +26,16 @@ export default async function BoardPage({ searchParams }: { searchParams: Promis
     <div className="min-h-screen">
       <AppHeader member={me} area="zarzad" />
       <main className="mx-auto flex max-w-[1360px] flex-col gap-6 px-6 py-6">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-[28px] font-bold">Członkowie i konta</h1>
-          <p className="text-ink-muted">
-            Aktywnych członków: {activeCount} · deklaracji do rozpatrzenia: {declarations?.length ?? 0}
-          </p>
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div className="flex flex-col gap-1">
+            <h1 className="text-[28px] font-bold">Członkowie i konta</h1>
+            <p className="text-ink-muted">
+              Aktywnych członków: {activeCount} · deklaracji do rozpatrzenia: {declarations?.length ?? 0}
+            </p>
+          </div>
+          <a href={`/zarzad/eksport${q ? `?q=${encodeURIComponent(q)}` : ''}`} className="btn-secondary" download>
+            Eksport listy (CSV / Excel)
+          </a>
         </div>
 
         {(declarations?.length ?? 0) > 0 && (
@@ -126,6 +131,14 @@ export default async function BoardPage({ searchParams }: { searchParams: Promis
                       <td className="px-4 py-1.5">
                         <div className="flex flex-wrap items-center gap-1.5">
                           <ResetPasswordButton memberId={m.id} />
+                          {m.is_board && m.id !== me.id && (
+                            <form action={resetTwoFactor}>
+                              <input type="hidden" name="member_id" value={m.id} />
+                              <button type="submit" className="btn-secondary px-2.5 text-sm">
+                                Reset 2FA
+                              </button>
+                            </form>
+                          )}
                           {m.id !== me.id && (
                             <form action={toggleBlock}>
                               <input type="hidden" name="member_id" value={m.id} />

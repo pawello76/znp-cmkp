@@ -23,6 +23,7 @@ Migracje w `supabase/migrations` (zastosowane w projekcie Supabase):
 2. `…_functions_rls.sql` – funkcje (m.in. `cast_vote`), wyzwalacze, dziennik zdarzeń, reguły RLS
 3. `…_storage_seed.sql` – prywatne miejsca na pliki (`photos`, `documents`, `imports`) i dane startowe
 4. `…_members_insert_by_board.sql` – zarząd dodaje członków
+5. `…_log_event.sql` – zapis eksportów i resetów 2FA w dzienniku
 
 Typy TypeScript bazy: `src/lib/supabase/types.ts` (generowane z projektu).
 
@@ -35,7 +36,7 @@ Konta zakłada zarząd; hasło tymczasowe trzeba zmienić przy pierwszym logowan
 ## Etapy
 
 - [x] 1. Fundament: baza, RLS, testy uprawnień
-- [~] 2. Konta: logowanie, zmiana hasła, deklaracje, lista członków (eksport, legitymacja, 2FA – w toku)
+- [x] 2. Konta: logowanie, zmiana hasła, deklaracje, lista członków z eksportem, legitymacja ze zdjęciem, 2FA zarządu
 - [ ] 3. Składki i import wyciągu
 - [ ] 4. Aktualności, dokumenty, wydarzenia
 - [ ] 5. Głosowania, zadania, benefity, wiadomości
