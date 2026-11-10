@@ -110,7 +110,9 @@ export default async function BoardPage({ searchParams }: { searchParams: Promis
                     <tr key={m.id} className="border-t border-[#EDF0F3]">
                       <td className="px-4 py-2.5 font-semibold">{m.member_no}</td>
                       <td className="px-3 py-2.5">
-                        {m.first_name} {m.last_name}
+                        <a href={`/zarzad/czlonek/${m.id}`} className="font-semibold text-navy underline">
+                          {m.first_name} {m.last_name}
+                        </a>
                       </td>
                       <td className="px-3 py-2.5 text-ink-soft">{m.is_board ? 'Zarząd' : 'Członek'}</td>
                       <td className="px-3 py-2.5 text-ink-soft">{formatDate(m.joined_at)}</td>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useActionState } from 'react';
+import { PasswordInput } from '@/components/password-input';
 import { signIn, type LoginState } from './actions';
 
 export function LoginForm() {
@@ -18,7 +19,7 @@ export function LoginForm() {
         <label htmlFor="password" className="label">
           Hasło
         </label>
-        <input id="password" name="password" type="password" autoComplete="current-password" required className="field" />
+        <PasswordInput id="password" name="password" autoComplete="current-password" />
       </div>
       {state.error && (
         <p role="alert" className="rounded-lg bg-accent-light px-4 py-3 font-semibold text-[#9B1C1C]">

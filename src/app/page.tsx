@@ -62,7 +62,7 @@ export default async function MemberHome() {
         </section>
 
         <p className="text-ink-muted">
-          Kolejne moduły (aktualności, głosowania, wydarzenia, dokumenty, benefity, składki, kontakt) pojawią się w
+          Kolejne moduły (aktualności, głosowania, wydarzenia, dokumenty, benefity, kontakt) pojawią się w
           następnych etapach.
         </p>
       </main>

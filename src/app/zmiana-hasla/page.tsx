@@ -16,7 +16,7 @@ export default async function ChangePasswordPage() {
               : 'Wpisz nowe hasło dwa razy.'}
           </p>
         </div>
-        <ChangePasswordForm minLength={PASSWORD_MIN_LENGTH} />
+        <ChangePasswordForm minLength={PASSWORD_MIN_LENGTH} canCancel={!member.must_change_password} />
       </div>
     </main>
   );
