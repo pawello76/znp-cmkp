@@ -1,5 +1,5 @@
 import { BoardShell } from '@/components/shell';
-import { formatAmount, formatDate } from '@/lib/format';
+import { formatAmount, formatDate, formatDateTime } from '@/lib/format';
 import { requireBoard } from '@/lib/session';
 import { rejectDeclaration } from '../actions';
 import { AddMemberForm, ApproveDeclarationForm, ResetPasswordButton } from './forms';
@@ -103,7 +103,7 @@ export default async function BoardPage({ searchParams }: { searchParams: Promis
             </button>
           </form>
           <div className="overflow-x-auto rounded-[10px] border border-line bg-white">
-            <table className="w-full min-w-[1200px] text-sm border-collapse">
+            <table className="w-full min-w-[1320px] text-sm border-collapse">
               <thead>
                 <tr className="text-left text-[13px] leading-tight text-ink-muted">
                   <th className="px-3 py-2 font-semibold">Login</th>
@@ -118,6 +118,7 @@ export default async function BoardPage({ searchParams }: { searchParams: Promis
                   <th className="px-2 py-2 text-right font-semibold">Nieprzecz. wiad.</th>
                   <th className="px-2 py-2 text-right font-semibold">Wydarzenia</th>
                   <th className="px-2 py-2 font-semibold">Konto</th>
+                  <th className="px-2 py-2 font-semibold">Ostatnie logowanie</th>
                   <th className="px-3 py-2 font-semibold">Akcje</th>
                 </tr>
               </thead>
@@ -162,6 +163,7 @@ export default async function BoardPage({ searchParams }: { searchParams: Promis
                           <span className="text-[#9B1C1C]">Zablokowane</span>
                         )}
                       </td>
+                      <td className="whitespace-nowrap px-2 py-1.5 text-ink-soft">{m.last_seen_at ? formatDateTime(m.last_seen_at) : '-'}</td>
                       <td className="whitespace-nowrap px-3 py-1.5">
                         <span className="flex items-center gap-3">
                           <a href={`/zarzad/czlonek/${m.id}?wplata=1#wplata`} className="font-semibold text-navy underline">
@@ -175,7 +177,7 @@ export default async function BoardPage({ searchParams }: { searchParams: Promis
                 })}
                 {list.length === 0 && (
                   <tr>
-                    <td colSpan={13} className="px-4 py-6 text-ink-muted">
+                    <td colSpan={14} className="px-4 py-6 text-ink-muted">
                       Brak członków spełniających kryteria.
                     </td>
                   </tr>
@@ -202,7 +204,7 @@ export default async function BoardPage({ searchParams }: { searchParams: Promis
                     <td className="px-3 py-3 text-right font-bold tabular-nums">
                       {list.reduce((s, m) => s + (eventsById.get(m.id) ?? 0), 0)}
                     </td>
-                    <td colSpan={2} />
+                    <td colSpan={3} />
                   </tr>
                 </tfoot>
               )}
