@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useEffect, useRef, useState } from 'react';
 import type { Member } from '@/lib/session';
 import { addPayment, updateMember, type FormState } from './actions';
 
@@ -41,55 +41,96 @@ function Field({
   );
 }
 
+const inp =
+  'h-10 w-full rounded-md border border-line-strong bg-white px-2.5 text-[15px] disabled:border-transparent disabled:bg-page disabled:px-2.5 disabled:text-ink disabled:opacity-100';
+
+function Cell({ id, label, children, wide = false }: { id: string; label: string; children: React.ReactNode; wide?: boolean }) {
+  return (
+    <div className={`flex flex-col gap-0.5 ${wide ? 'sm:col-span-2' : ''}`}>
+      <label htmlFor={id} className="text-[13px] font-semibold text-ink-muted">
+        {label}
+      </label>
+      {children}
+    </div>
+  );
+}
+
 export function EditMemberForm({ member, isSelf }: { member: Member; isSelf: boolean }) {
   const [state, action, pending] = useActionState<FormState, FormData>(updateMember, {});
+  const [editing, setEditing] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  useEffect(() => {
+    if (state.ok) setEditing(false);
+  }, [state]);
+
+  const cancel = () => {
+    formRef.current?.reset();
+    setEditing(false);
+  };
 
   return (
-    <form action={action} className="flex flex-col gap-4">
+    <form ref={formRef} action={action} className="flex flex-col gap-3">
       <input type="hidden" name="member_id" value={member.id} />
-      <div className="flex flex-wrap gap-3">
-        <Field id="e-login" label="Login" grow="1_1_160px">
-          <input id="e-login" name="login" defaultValue={member.login} required inputMode="numeric" className="field" />
-        </Field>
-        <Field id="e-no" label="Numer członkowski" grow="1_1_160px">
-          <input id="e-no" name="member_no" defaultValue={member.member_no ?? ''} placeholder="do nadania" className="field" />
-        </Field>
-      </div>
-      <div className="flex flex-wrap gap-3">
-        <Field id="e-first" label="Imię">
-          <input id="e-first" name="first_name" defaultValue={member.first_name} required className="field" />
-        </Field>
-        <Field id="e-last" label="Nazwisko">
-          <input id="e-last" name="last_name" defaultValue={member.last_name} required className="field" />
-        </Field>
-        <Field id="e-email" label="E-mail" grow="1_1_240px">
-          <input id="e-email" name="email" type="email" defaultValue={member.email ?? ''} className="field" />
-        </Field>
-      </div>
-      <div className="flex flex-wrap gap-3">
-        <Field id="e-unit" label="Jednostka w CMKP">
-          <input id="e-unit" name="unit" defaultValue={member.unit ?? ''} className="field" />
-        </Field>
-        <Field id="e-position" label="Stanowisko">
-          <input id="e-position" name="position" defaultValue={member.position ?? ''} className="field" />
-        </Field>
-        <Field id="e-joined" label="Data przyjęcia" grow="1_1_160px">
-          <input id="e-joined" name="joined_at" type="date" defaultValue={member.joined_at} required className="field" />
-        </Field>
-        <Field id="e-card" label="Legitymacja ważna do" grow="1_1_160px">
-          <input id="e-card" name="card_valid_until" type="date" defaultValue={member.card_valid_until ?? ''} className="field" />
-        </Field>
-      </div>
-      <p className="text-sm text-ink-muted">Puste pole ważności = legitymacja ważna do końca bieżącego roku.</p>
-      <label className="flex min-h-[44px] items-center gap-2.5">
-        <input type="checkbox" name="is_board" defaultChecked={member.is_board} disabled={isSelf} className="h-5 w-5" />
-        <span>Członek zarządu{isSelf ? ' (nie możesz zmienić własnej roli)' : ''}</span>
-        {isSelf && <input type="hidden" name="is_board" value="on" />}
-      </label>
+      <fieldset disabled={!editing} className="grid grid-cols-2 gap-x-3 gap-y-2 sm:grid-cols-4">
+        <legend className="sr-only">Dane członka</legend>
+        <Cell id="e-login" label="Login">
+          <input id="e-login" name="login" defaultValue={member.login} required inputMode="numeric" className={inp} />
+        </Cell>
+        <Cell id="e-no" label="Numer członkowski">
+          <input id="e-no" name="member_no" defaultValue={member.member_no ?? ''} placeholder="do nadania" className={inp} />
+        </Cell>
+        <Cell id="e-first" label="Imię">
+          <input id="e-first" name="first_name" defaultValue={member.first_name} required className={inp} />
+        </Cell>
+        <Cell id="e-last" label="Nazwisko">
+          <input id="e-last" name="last_name" defaultValue={member.last_name} required className={inp} />
+        </Cell>
+        <Cell id="e-email" label="E-mail" wide>
+          <input id="e-email" name="email" type="email" defaultValue={member.email ?? ''} className={inp} />
+        </Cell>
+        <Cell id="e-unit" label="Jednostka w CMKP">
+          <input id="e-unit" name="unit" defaultValue={member.unit ?? ''} className={inp} />
+        </Cell>
+        <Cell id="e-position" label="Stanowisko">
+          <input id="e-position" name="position" defaultValue={member.position ?? ''} className={inp} />
+        </Cell>
+        <Cell id="e-joined" label="Data przyjęcia">
+          <input id="e-joined" name="joined_at" type="date" defaultValue={member.joined_at} required className={inp} />
+        </Cell>
+        <Cell id="e-card" label="Legitymacja ważna do">
+          <input id="e-card" name="card_valid_until" type="date" defaultValue={member.card_valid_until ?? ''} className={inp} />
+        </Cell>
+        <div className="col-span-2 flex items-end">
+          <label className="flex min-h-10 items-center gap-2.5 text-[15px]">
+            <input type="checkbox" name="is_board" defaultChecked={member.is_board} disabled={isSelf || !editing} className="h-5 w-5" />
+            <span>Członek zarządu{isSelf && editing ? ' (nie możesz zmienić własnej roli)' : ''}</span>
+          </label>
+          {isSelf && <input type="hidden" name="is_board" value="on" />}
+        </div>
+      </fieldset>
+      {editing && (
+        <p className="text-sm text-ink-muted">
+          Puste pole ważności = legitymacja do końca bieżącego roku. Nowy login działa od razu, hasło się nie zmienia.
+        </p>
+      )}
       <Message state={state} />
-      <button type="submit" className="btn-primary self-start" disabled={pending}>
-        {pending ? 'Zapisywanie…' : 'Zapisz zmiany'}
-      </button>
+      <div className="flex flex-wrap gap-2">
+        {editing ? (
+          <>
+            <button type="submit" className="btn-primary" disabled={pending}>
+              {pending ? 'Zapisywanie…' : 'Zapisz zmiany'}
+            </button>
+            <button type="button" className="btn-secondary" onClick={cancel} disabled={pending}>
+              Anuluj
+            </button>
+          </>
+        ) : (
+          <button type="button" className="btn-secondary" onClick={() => setEditing(true)}>
+            Edytuj
+          </button>
+        )}
+      </div>
     </form>
   );
 }

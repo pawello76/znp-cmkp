@@ -1,7 +1,7 @@
 import { BoardShell } from '@/components/shell';
 import { formatAmount, formatDate } from '@/lib/format';
 import { requireBoard } from '@/lib/session';
-import { rejectDeclaration, resetTwoFactor, toggleBlock } from '../actions';
+import { rejectDeclaration } from '../actions';
 import { AddMemberForm, ApproveDeclarationForm, ResetPasswordButton } from './forms';
 
 export default async function BoardPage({ searchParams }: { searchParams: Promise<{ q?: string; rok?: string; nowy?: string }> }) {
@@ -69,7 +69,7 @@ export default async function BoardPage({ searchParams }: { searchParams: Promis
               )}
             </p>
           </div>
-          <a href={`/zarzad/eksport${q ? `?q=${encodeURIComponent(q)}` : ''}`} className="btn-secondary" download>
+          <a href={`/zarzad/eksport?${new URLSearchParams({ ...(q ? { q } : {}), rok: allYears ? 'wszystkie' : String(year) })}`} className="btn-secondary" download>
             Eksport listy (CSV / Excel)
           </a>
         </div>
@@ -103,22 +103,22 @@ export default async function BoardPage({ searchParams }: { searchParams: Promis
             </button>
           </form>
           <div className="overflow-x-auto rounded-[10px] border border-line bg-white">
-            <table className="w-full min-w-[1440px] border-collapse">
+            <table className="w-full min-w-[1200px] text-sm border-collapse">
               <thead>
-                <tr className="text-left text-sm text-ink-muted">
-                  <th className="px-4 py-3.5 font-semibold">Login</th>
-                  <th className="px-3 py-3.5 font-semibold">Nr członkowski</th>
-                  <th className="px-3 py-3.5 font-semibold">Imię i nazwisko</th>
-                  <th className="px-3 py-3.5 font-semibold">Rola</th>
-                  <th className="px-3 py-3.5 font-semibold">Data przyjęcia</th>
-                  <th className="px-3 py-3.5 font-semibold">Składki</th>
-                  <th className="px-3 py-3.5 text-right font-semibold">Suma składek {allYears ? '(wszystkie lata)' : year}</th>
-                  <th className="px-3 py-3.5 text-right font-semibold">Benefity</th>
-                  <th className="px-3 py-3.5 text-right font-semibold">Wartość benefitów</th>
-                  <th className="px-3 py-3.5 text-right font-semibold">Nieprzeczytane wiadomości</th>
-                  <th className="px-3 py-3.5 text-right font-semibold">Wydarzenia</th>
-                  <th className="px-3 py-3.5 font-semibold">Konto</th>
-                  <th className="px-4 py-3.5 font-semibold">Akcje</th>
+                <tr className="text-left text-[13px] leading-tight text-ink-muted">
+                  <th className="px-3 py-2 font-semibold">Login</th>
+                  <th className="px-2 py-2 font-semibold">Nr czł.</th>
+                  <th className="px-2 py-2 font-semibold">Imię i nazwisko</th>
+                  <th className="px-2 py-2 font-semibold">Rola</th>
+                  <th className="px-2 py-2 font-semibold">Przyjęty</th>
+                  <th className="px-2 py-2 font-semibold">Status składek</th>
+                  <th className="px-2 py-2 text-right font-semibold">Składki {allYears ? 'razem' : year}</th>
+                  <th className="px-2 py-2 text-right font-semibold">Benefity</th>
+                  <th className="px-2 py-2 text-right font-semibold">Wart. benefitów</th>
+                  <th className="px-2 py-2 text-right font-semibold">Nieprzecz. wiad.</th>
+                  <th className="px-2 py-2 text-right font-semibold">Wydarzenia</th>
+                  <th className="px-2 py-2 font-semibold">Konto</th>
+                  <th className="px-3 py-2 font-semibold">Akcje</th>
                 </tr>
               </thead>
               <tbody>
@@ -126,65 +126,49 @@ export default async function BoardPage({ searchParams }: { searchParams: Promis
                   const due = dueById.get(m.id) ?? 0;
                   return (
                     <tr key={m.id} className="border-t border-[#EDF0F3]">
-                      <td className="px-4 py-2.5 font-semibold">{m.login}</td>
-                      <td className="px-3 py-2.5 text-ink-soft">{m.member_no ?? '–'}</td>
-                      <td className="px-3 py-2.5">
-                        <a href={`/zarzad/czlonek/${m.id}`} className="font-semibold text-navy underline">
+                      <td className="px-3 py-1.5 font-semibold">{m.login}</td>
+                      <td className="px-2 py-1.5 text-ink-soft">{m.member_no ?? '–'}</td>
+                      <td className="px-2 py-1.5">
+                        <a href={`/zarzad/czlonek/${m.id}`} className="whitespace-nowrap font-semibold text-navy underline">
                           {m.first_name} {m.last_name}
                         </a>
                       </td>
-                      <td className="px-3 py-2.5 text-ink-soft">{m.is_board ? 'Zarząd' : 'Członek'}</td>
-                      <td className="px-3 py-2.5 text-ink-soft">{formatDate(m.joined_at)}</td>
-                      <td className="px-3 py-2.5">
+                      <td className="px-2 py-1.5 text-ink-soft">{m.is_board ? 'Zarząd' : 'Członek'}</td>
+                      <td className="px-2 py-1.5 text-ink-soft">{formatDate(m.joined_at)}</td>
+                      <td className="px-2 py-1.5">
                         {due === 0 ? (
-                          <span className="chip bg-ok-light py-0.5 text-ok">Opłacone</span>
+                          <span className="chip whitespace-nowrap bg-ok-light px-2 py-0 text-[13px] text-ok">Opłacone</span>
                         ) : (
-                          <span className="chip bg-warn-light py-0.5 text-warn">Zaległość {due} mies.</span>
+                          <span className="chip whitespace-nowrap bg-warn-light px-2 py-0 text-[13px] text-warn">Zaległość {due} mies.</span>
                         )}
                       </td>
-                      <td className="whitespace-nowrap px-3 py-2.5 text-right font-semibold tabular-nums">
+                      <td className="whitespace-nowrap px-2 py-1.5 text-right font-semibold tabular-nums">
                         {formatAmount(sumById.get(m.id) ?? 0)}
                       </td>
-                      <td className="px-3 py-2.5 text-right tabular-nums">{benById.get(m.id)?.n ?? 0}</td>
-                      <td className="whitespace-nowrap px-3 py-2.5 text-right tabular-nums">{formatAmount(benById.get(m.id)?.sum ?? 0)}</td>
-                      <td className="px-3 py-2.5 text-right tabular-nums">
+                      <td className="px-2 py-1.5 text-right tabular-nums">{benById.get(m.id)?.n ?? 0}</td>
+                      <td className="whitespace-nowrap px-2 py-1.5 text-right tabular-nums">{formatAmount(benById.get(m.id)?.sum ?? 0)}</td>
+                      <td className="px-2 py-1.5 text-right tabular-nums">
                         {(unreadById.get(m.id) ?? 0) > 0 ? (
                           <span className="chip bg-accent-light py-0.5 text-accent">{unreadById.get(m.id)}</span>
                         ) : (
                           0
                         )}
                       </td>
-                      <td className="px-3 py-2.5 text-right tabular-nums">{eventsById.get(m.id) ?? 0}</td>
-                      <td className="px-3 py-2.5 font-semibold">
+                      <td className="px-2 py-1.5 text-right tabular-nums">{eventsById.get(m.id) ?? 0}</td>
+                      <td className="px-2 py-1.5 font-semibold">
                         {m.status === 'aktywny' ? (
                           <span className="text-ok">Aktywne</span>
                         ) : (
                           <span className="text-[#9B1C1C]">Zablokowane</span>
                         )}
                       </td>
-                      <td className="px-4 py-1.5">
-                        <div className="flex flex-wrap items-center gap-1.5">
-                          <a href={`/zarzad/czlonek/${m.id}?wplata=1#wplata`} className="btn-secondary px-2.5 text-sm">
+                      <td className="whitespace-nowrap px-3 py-1.5">
+                        <span className="flex items-center gap-3">
+                          <a href={`/zarzad/czlonek/${m.id}?wplata=1#wplata`} className="font-semibold text-navy underline">
                             Dodaj wpłatę
                           </a>
                           <ResetPasswordButton memberId={m.id} />
-                          {m.is_board && m.id !== me.id && (
-                            <form action={resetTwoFactor}>
-                              <input type="hidden" name="member_id" value={m.id} />
-                              <button type="submit" className="btn-secondary px-2.5 text-sm">
-                                Reset 2FA
-                              </button>
-                            </form>
-                          )}
-                          {m.id !== me.id && (
-                            <form action={toggleBlock}>
-                              <input type="hidden" name="member_id" value={m.id} />
-                              <button type="submit" className="btn-secondary px-2.5 text-sm">
-                                {m.status === 'aktywny' ? 'Zablokuj' : 'Odblokuj'}
-                              </button>
-                            </form>
-                          )}
-                        </div>
+                        </span>
                       </td>
                     </tr>
                   );

@@ -4,6 +4,8 @@ import { formatAmount, formatDate, formatDateTime, formatMonth } from '@/lib/for
 import { cardValidUntil, requireBoard } from '@/lib/session';
 import { deletePayment } from './actions';
 import { AddPaymentForm, EditMemberForm } from './forms';
+import { ResetPasswordButton } from '../../czlonkowie/forms';
+import { resetTwoFactor, toggleBlock } from '../../actions';
 
 export default async function MemberEditPage({
   params,
@@ -66,12 +68,33 @@ export default async function MemberEditPage({
           <span className="chip bg-page text-ink-soft">Legitymacja do {formatDate(cardValidUntil(m))}</span>
         </div>
 
-        <section className="card flex flex-col gap-3" aria-labelledby="dane">
+        <section className="card flex flex-col gap-3 py-4" aria-labelledby="dane">
           <h2 id="dane" className="text-lg font-bold">
             Dane członka
           </h2>
-          <p className="text-sm text-ink-muted">Zmiana loginu działa od razu: członek loguje się nowym loginem i dotychczasowym hasłem.</p>
           <EditMemberForm member={m} isSelf={m.id === me.id} />
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-[#EDF0F3] pt-3 text-[15px]">
+            <span className="text-ink-muted">
+              Konto: <strong className={m.status === 'aktywny' ? 'text-ok' : 'text-[#9B1C1C]'}>{m.status === 'aktywny' ? 'aktywne' : 'zablokowane'}</strong>
+            </span>
+            <ResetPasswordButton memberId={m.id} />
+            {m.id !== me.id && (
+              <form action={toggleBlock}>
+                <input type="hidden" name="member_id" value={m.id} />
+                <button type="submit" className="font-semibold text-navy underline">
+                  {m.status === 'aktywny' ? 'Zablokuj konto' : 'Odblokuj konto'}
+                </button>
+              </form>
+            )}
+            {m.is_board && m.id !== me.id && (
+              <form action={resetTwoFactor}>
+                <input type="hidden" name="member_id" value={m.id} />
+                <button type="submit" className="font-semibold text-navy underline">
+                  Reset 2FA
+                </button>
+              </form>
+            )}
+          </div>
         </section>
 
         <section className="card flex flex-col gap-4" aria-labelledby="skladki">

@@ -140,17 +140,17 @@ export function ResetPasswordButton({ memberId }: { memberId: string }) {
 
   if (state.tempPassword) {
     return (
-      <span className="text-sm font-semibold text-ok">
-        Nowe hasło tymczasowe: <code className="font-mono text-base">{state.tempPassword}</code>
+      <span className="font-semibold text-ok">
+        Hasło tymczasowe: <code className="font-mono">{state.tempPassword}</code>
       </span>
     );
   }
 
   return (
-    <form action={formAction}>
+    <form action={formAction} className="inline">
       <input type="hidden" name="member_id" value={memberId} />
-      <button type="submit" className="btn-secondary px-2.5 text-sm" disabled={pending}>
-        {pending ? '…' : 'Reset hasła'}
+      <button type="submit" className="font-semibold text-navy underline disabled:opacity-60" disabled={pending}>
+        {pending ? 'Resetowanie…' : 'Reset hasła'}
       </button>
       {state.error && <span className="ml-2 text-sm text-[#9B1C1C]">{state.error}</span>}
     </form>
