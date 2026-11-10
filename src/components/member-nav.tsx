@@ -2,6 +2,9 @@ import Link from 'next/link';
 
 const ITEMS = [
   { href: '/', label: 'Pulpit' },
+  { href: '/aktualnosci', label: 'Aktualności' },
+  { href: '/wydarzenia', label: 'Wydarzenia' },
+  { href: '/dokumenty', label: 'Dokumenty' },
   { href: '/legitymacja', label: 'Legitymacja' },
   { href: '/skladki', label: 'Składki' },
   { href: '/zmiana-hasla', label: 'Zmiana hasła' },

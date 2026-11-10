@@ -1,4 +1,5 @@
 import { AppHeader } from '@/components/app-header';
+import { BoardNav } from '@/components/board-nav';
 import { formatDate } from '@/lib/format';
 import { requireBoard } from '@/lib/session';
 import { rejectDeclaration, resetTwoFactor, toggleBlock } from './actions';
@@ -25,6 +26,7 @@ export default async function BoardPage({ searchParams }: { searchParams: Promis
   return (
     <div className="min-h-screen">
       <AppHeader member={me} area="zarzad" />
+      <BoardNav current="/zarzad" />
       <main className="mx-auto flex max-w-[1360px] flex-col gap-6 px-6 py-6">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div className="flex flex-col gap-1">

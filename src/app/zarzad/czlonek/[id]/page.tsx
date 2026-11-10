@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import { AppHeader } from '@/components/app-header';
+import { BoardNav } from '@/components/board-nav';
 import { formatAmount, formatDate, formatMonth } from '@/lib/format';
 import { cardValidUntil, requireBoard } from '@/lib/session';
 import { deletePayment } from './actions';
@@ -26,6 +27,7 @@ export default async function MemberEditPage({ params }: { params: Promise<{ id:
   return (
     <div className="min-h-screen">
       <AppHeader member={me} area="zarzad" />
+      <BoardNav current="/zarzad" />
       <main className="mx-auto flex max-w-[1360px] flex-col gap-6 px-6 py-6">
         <a href="/zarzad" className="self-start font-semibold text-navy">
           ← Wróć do listy członków

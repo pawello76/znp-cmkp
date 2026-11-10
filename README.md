@@ -38,6 +38,6 @@ Konta zakłada zarząd; hasło tymczasowe trzeba zmienić przy pierwszym logowan
 - [x] 1. Fundament: baza, RLS, testy uprawnień
 - [x] 2. Konta: logowanie, zmiana hasła, deklaracje, lista członków z eksportem, legitymacja ze zdjęciem, 2FA zarządu
 - [x] 3. Składki – wpis ręczny, edycja danych członka (import wyciągu odłożony)
-- [ ] 4. Aktualności, dokumenty, wydarzenia
+- [x] 4. Aktualności, dokumenty (potwierdzenia odczytu), wydarzenia (zapisy)
 - [ ] 5. Głosowania, zadania, benefity, wiadomości
 - [ ] 6. Start
