@@ -118,15 +118,25 @@ export function EditMemberForm({ member, isSelf }: { member: Member; isSelf: boo
       <div className="flex flex-wrap gap-2">
         {editing ? (
           <>
-            <button type="submit" className="btn-primary" disabled={pending}>
+            <button key="save" type="submit" className="btn-primary" disabled={pending}>
               {pending ? 'Zapisywanie…' : 'Zapisz zmiany'}
             </button>
-            <button type="button" className="btn-secondary" onClick={cancel} disabled={pending}>
+            <button key="cancel" type="button" className="btn-secondary" onClick={cancel} disabled={pending}>
               Anuluj
             </button>
           </>
         ) : (
-          <button type="button" className="btn-secondary" onClick={() => setEditing(true)}>
+          <button
+            key="edit"
+            type="button"
+            className="btn-secondary"
+            onClick={(e) => {
+              e.preventDefault();
+              setEditing(true);
+              // fokus na pierwsze pole po odblokowaniu
+              setTimeout(() => formRef.current?.querySelector<HTMLInputElement>('#e-login')?.focus(), 0);
+            }}
+          >
             Edytuj
           </button>
         )}
