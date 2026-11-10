@@ -1,6 +1,6 @@
 import { revalidatePath } from 'next/cache';
 import { MemberShell } from '@/components/shell';
-import { formatDate } from '@/lib/format';
+import { formatAmount, formatDate } from '@/lib/format';
 import { requireMember } from '@/lib/session';
 
 async function requestBenefit(formData: FormData) {
@@ -44,21 +44,31 @@ export default async function BenefitsPage() {
           {mine.map((b) => {
             const r = latest.get(b.id)!;
             return (
-              <div key={b.id} className="flex flex-wrap items-center justify-between gap-3 border-t border-[#EDF0F3] pt-2.5">
-                <span className="font-semibold">{b.name}</span>
-                {r.status === 'przyznany' ? (
-                  <span className="flex flex-wrap items-center gap-2">
-                    {r.card_number && (
-                      <span className="text-[15px]">
-                        Nr karty: <strong className="font-mono">{r.card_number}</strong>
-                      </span>
-                    )}
+              <div key={b.id} className="flex flex-col gap-2 border-t border-[#EDF0F3] pt-2.5">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <span className="font-semibold">
+                    {b.name}
+                    {b.value_grosz != null && <span className="font-normal text-ink-muted"> · wartość {formatAmount(b.value_grosz)}</span>}
+                  </span>
+                  {r.status === 'przyznany' ? (
                     <span className="chip bg-ok-light text-ok">
                       Aktywny{r.active_from ? ` od ${formatDate(r.active_from)}` : ''}
                     </span>
-                  </span>
-                ) : (
-                  <span className="chip bg-warn-light text-warn">Zgłoszony · czeka na potwierdzenie zarządu</span>
+                  ) : (
+                    <span className="chip bg-warn-light text-warn">Zgłoszony · czeka na potwierdzenie zarządu</span>
+                  )}
+                </div>
+                {r.status === 'przyznany' && (
+                  <dl className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-3 rounded-lg bg-page p-3">
+                    <div className="flex flex-col">
+                      <dt className="text-sm text-ink-muted">Numer karty</dt>
+                      <dd className="font-mono text-[17px] font-bold">{r.card_number ?? <span className="font-sans text-[15px] font-normal text-ink-muted">nada zarząd</span>}</dd>
+                    </div>
+                    <div className="flex flex-col">
+                      <dt className="text-sm text-ink-muted">Data wydania karty</dt>
+                      <dd className="text-[17px] font-bold">{r.card_issued_on ? formatDate(r.card_issued_on) : <span className="text-[15px] font-normal text-ink-muted">–</span>}</dd>
+                    </div>
+                  </dl>
                 )}
               </div>
             );
@@ -68,16 +78,24 @@ export default async function BenefitsPage() {
 
         <div className="grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-4">
           {(benefits ?? []).map((b) => {
-            const status = latest.get(b.id)?.status;
+            const req = latest.get(b.id);
+            const status = req?.status;
             return (
               <div key={b.id} className="card flex flex-col gap-2.5">
                 {b.category && (
                   <span className="text-[13px] font-bold uppercase tracking-[0.06em] text-ink-muted">{b.category}</span>
                 )}
                 <h2 className="text-xl font-bold">{b.name}</h2>
+                {b.value_grosz != null && <span className="font-semibold text-navy">Wartość: {formatAmount(b.value_grosz)}</span>}
                 {b.description && <p className="whitespace-pre-line leading-relaxed text-ink-soft">{b.description}</p>}
                 {status === 'przyznany' ? (
-                  <span className="mt-auto rounded-lg bg-ok-light p-3 font-semibold text-ok">✓ Masz ten benefit</span>
+                  <span className="mt-auto flex flex-col gap-0.5 rounded-lg bg-ok-light p-3 text-ok">
+                    <span className="font-semibold">✓ Masz ten benefit</span>
+                    <span className="text-[15px] text-ink">
+                      Nr karty: <strong className="font-mono">{req?.card_number ?? 'nada zarząd'}</strong>
+                    </span>
+                    {req?.card_issued_on && <span className="text-[15px] text-ink">Wydana: {formatDate(req.card_issued_on)}</span>}
+                  </span>
                 ) : status === 'zgloszony' ? (
                   <span className="mt-auto rounded-lg bg-warn-light p-3 font-semibold text-warn">Zgłoszono · czeka na potwierdzenie</span>
                 ) : (

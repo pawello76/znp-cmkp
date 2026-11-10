@@ -5,8 +5,15 @@ import { cardValidUntil, requireBoard } from '@/lib/session';
 import { deletePayment } from './actions';
 import { AddPaymentForm, EditMemberForm } from './forms';
 
-export default async function MemberEditPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function MemberEditPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ wplata?: string }>;
+}) {
   const { id } = await params;
+  const { wplata } = await searchParams;
   const { supabase, member: me } = await requireBoard();
 
   const [{ data: m }, { data: payments }, { data: dues }] = await Promise.all([
@@ -53,10 +60,21 @@ export default async function MemberEditPage({ params }: { params: Promise<{ id:
         </section>
 
         <section className="card flex flex-col gap-4" aria-labelledby="skladki">
-          <h2 id="skladki" className="text-lg font-bold">
-            Składki – wpis ręczny
-          </h2>
-          <AddPaymentForm memberId={m.id} defaultMonth={defaultMonth} today={today} />
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 id="skladki" className="text-lg font-bold">
+              Składki
+            </h2>
+            <span className="text-ink-soft">
+              Suma wpłat: <strong>{formatAmount((payments ?? []).reduce((s, p) => s + p.amount_grosz, 0))}</strong>
+            </span>
+          </div>
+          <details id="wplata" open={wplata === '1'} className="group">
+            <summary className="btn-primary inline-flex cursor-pointer list-none group-open:mb-4 [&::-webkit-details-marker]:hidden">
+              <span className="group-open:hidden">+ Dodaj wpłatę</span>
+              <span className="hidden group-open:inline">Zwiń formularz</span>
+            </summary>
+            <AddPaymentForm memberId={m.id} defaultMonth={defaultMonth} today={today} />
+          </details>
           <div className="overflow-x-auto rounded-[10px] border border-line">
             <table className="w-full min-w-[640px] border-collapse">
               <thead>

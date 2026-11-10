@@ -9,7 +9,7 @@ function Msg({ s }: { s: BenefitFormState }) {
   return null;
 }
 
-type Benefit = { id: string; name: string; category: string | null; description: string | null };
+type Benefit = { id: string; name: string; category: string | null; description: string | null; value_grosz: number | null };
 
 function Fields({ prefix, b }: { prefix: string; b?: Benefit }) {
   return (
@@ -26,6 +26,19 @@ function Fields({ prefix, b }: { prefix: string; b?: Benefit }) {
             Kategoria
           </label>
           <input id={`${prefix}-cat`} name="category" defaultValue={b?.category ?? ''} placeholder="np. Sport i rekreacja" className="field" />
+        </div>
+        <div className="flex flex-[1_1_140px] flex-col gap-1.5">
+          <label htmlFor={`${prefix}-val`} className="label">
+            Wartość (zł)
+          </label>
+          <input
+            id={`${prefix}-val`}
+            name="value"
+            inputMode="decimal"
+            placeholder="np. 77,00"
+            defaultValue={b?.value_grosz != null ? (b.value_grosz / 100).toFixed(2).replace('.', ',') : ''}
+            className="field"
+          />
         </div>
       </div>
       <div className="flex flex-col gap-1.5">

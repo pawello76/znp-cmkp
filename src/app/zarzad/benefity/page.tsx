@@ -1,5 +1,5 @@
 import { BoardShell } from '@/components/shell';
-import { formatDate } from '@/lib/format';
+import { formatAmount, formatDate } from '@/lib/format';
 import { requireBoard } from '@/lib/session';
 import { decideRequest, setCardNumber, toggleBenefitVisible } from './actions';
 import { AddBenefitForm, EditBenefitForm } from './forms';
@@ -14,6 +14,7 @@ export default async function BoardBenefitsPage() {
   ]);
   const who = new Map((members ?? []).map((m) => [m.id, `${m.first_name} ${m.last_name}${m.member_no ? ` (${m.member_no})` : ''}`]));
   const benefitName = new Map((benefits ?? []).map((b) => [b.id, b.name]));
+  const today = new Date().toISOString().slice(0, 10);
   const pending = (requests ?? []).filter((r) => r.status === 'zgloszony');
   const active = (requests ?? []).filter((r) => r.status === 'przyznany');
   const usersOf = (id: string) => active.filter((r) => r.benefit_id === id);
@@ -44,6 +45,12 @@ export default async function BoardBenefitsPage() {
                     </label>
                     <input id={`card-${r.id}`} name="card_number" maxLength={64} className="field h-11 w-48" />
                   </span>
+                  <span className="flex flex-col gap-1">
+                    <label htmlFor={`cd-${r.id}`} className="text-sm font-semibold">
+                      Data wydania karty
+                    </label>
+                    <input id={`cd-${r.id}`} name="card_issued_on" type="date" defaultValue={today} className="field h-11 w-44" />
+                  </span>
                   <button type="submit" className="btn-primary">
                     Przyznaj
                   </button>
@@ -73,6 +80,7 @@ export default async function BoardBenefitsPage() {
                   <span className="flex flex-col">
                     <span className="font-bold">{b.name}</span>
                     <span className="text-sm text-ink-muted">
+                      {b.value_grosz != null ? `Wartość ${formatAmount(b.value_grosz)} · ` : ''}
                       {b.is_visible ? 'Widoczny dla członków' : 'Ukryty'} · korzysta: {users.length}
                     </span>
                   </span>
@@ -95,12 +103,16 @@ export default async function BoardBenefitsPage() {
                           <span>
                             {who.get(r.member_id)} · od {r.active_from ? formatDate(r.active_from) : '–'}
                           </span>
-                          <form action={setCardNumber} className="flex items-center gap-1.5">
+                          <form action={setCardNumber} className="flex flex-wrap items-center gap-1.5">
                             <input type="hidden" name="request_id" value={r.id} />
                             <label htmlFor={`cn-${r.id}`} className="text-sm text-ink-muted">
                               Nr karty
                             </label>
                             <input id={`cn-${r.id}`} name="card_number" defaultValue={r.card_number ?? ''} maxLength={64} className="field h-11 w-44" />
+                            <label htmlFor={`cdt-${r.id}`} className="text-sm text-ink-muted">
+                              wydana
+                            </label>
+                            <input id={`cdt-${r.id}`} name="card_issued_on" type="date" defaultValue={r.card_issued_on ?? ''} className="field h-11 w-40" />
                             <button type="submit" className="btn-secondary px-2.5 text-sm">
                               Zapisz
                             </button>

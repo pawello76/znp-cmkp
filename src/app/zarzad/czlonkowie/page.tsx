@@ -1,18 +1,30 @@
 import { BoardShell } from '@/components/shell';
-import { formatDate } from '@/lib/format';
+import { formatAmount, formatDate } from '@/lib/format';
 import { requireBoard } from '@/lib/session';
 import { rejectDeclaration, resetTwoFactor, toggleBlock } from '../actions';
 import { AddMemberForm, ApproveDeclarationForm, ResetPasswordButton } from './forms';
 
-export default async function BoardPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
+export default async function BoardPage({ searchParams }: { searchParams: Promise<{ q?: string; rok?: string; nowy?: string }> }) {
   const { supabase, member: me } = await requireBoard();
-  const { q = '' } = await searchParams;
+  const { q = '', rok, nowy } = await searchParams;
 
-  const [{ data: members }, { data: dues }, { data: declarations }] = await Promise.all([
+  const [{ data: members }, { data: dues }, { data: declarations }, { data: payments }] = await Promise.all([
     supabase.from('members').select('*').order('last_name'),
     supabase.from('member_dues_status').select('member_id, months_due'),
     supabase.from('declarations').select('*').eq('status', 'oczekuje').order('created_at'),
+    supabase.from('dues_payments').select('member_id, amount_grosz, paid_on'),
   ]);
+
+  // Suma składek: wybrany rok (domyślnie bieżący) albo wszystkie lata
+  const currentYear = new Date().getFullYear();
+  const years = [...new Set([currentYear, ...(payments ?? []).map((p) => Number(p.paid_on.slice(0, 4)))])].sort((a, b) => b - a);
+  const allYears = rok === 'wszystkie';
+  const year = !allYears && rok && years.includes(Number(rok)) ? Number(rok) : currentYear;
+  const sumById = new Map<string, number>();
+  for (const p of payments ?? []) {
+    if (!allYears && !p.paid_on.startsWith(String(year))) continue;
+    sumById.set(p.member_id, (sumById.get(p.member_id) ?? 0) + p.amount_grosz);
+  }
 
   const dueById = new Map((dues ?? []).map((d) => [d.member_id, d.months_due ?? 0]));
   const query = q.trim().toLowerCase();
@@ -31,13 +43,154 @@ export default async function BoardPage({ searchParams }: { searchParams: Promis
           <div className="flex flex-col gap-1">
             <h1 className="text-[28px] font-bold">Członkowie i konta</h1>
             <p className="text-ink-muted">
-              Aktywnych członków: {activeCount} · deklaracji do rozpatrzenia: {declarations?.length ?? 0}
+              Aktywnych członków: {activeCount} ·{' '}
+              {(declarations?.length ?? 0) > 0 ? (
+                <a href="#dek" className="font-semibold text-accent underline">
+                  deklaracji do rozpatrzenia: {declarations!.length}
+                </a>
+              ) : (
+                'deklaracji do rozpatrzenia: 0'
+              )}
             </p>
           </div>
           <a href={`/zarzad/eksport${q ? `?q=${encodeURIComponent(q)}` : ''}`} className="btn-secondary" download>
             Eksport listy (CSV / Excel)
           </a>
         </div>
+
+        <section className="flex flex-col gap-3" aria-labelledby="lista">
+          <h2 id="lista" className="sr-only">
+            Lista członków
+          </h2>
+          <form className="flex flex-wrap items-end gap-3" role="search">
+            <div className="flex flex-[1_1_280px] flex-col gap-1.5 sm:max-w-[420px]">
+              <label htmlFor="q" className="label">
+                Szukaj po nazwisku, loginie lub numerze
+              </label>
+              <input id="q" name="q" type="search" defaultValue={q} className="field" />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="rok" className="label">
+                Suma składek za
+              </label>
+              <select id="rok" name="rok" defaultValue={allYears ? 'wszystkie' : String(year)} className="field w-44">
+                {years.map((y) => (
+                  <option key={y} value={y}>
+                    {y}
+                  </option>
+                ))}
+                <option value="wszystkie">wszystkie lata</option>
+              </select>
+            </div>
+            <button type="submit" className="btn-secondary">
+              Pokaż
+            </button>
+          </form>
+          <div className="overflow-x-auto rounded-[10px] border border-line bg-white">
+            <table className="w-full min-w-[1080px] border-collapse">
+              <thead>
+                <tr className="text-left text-sm text-ink-muted">
+                  <th className="px-4 py-3.5 font-semibold">Login</th>
+                  <th className="px-3 py-3.5 font-semibold">Nr członkowski</th>
+                  <th className="px-3 py-3.5 font-semibold">Imię i nazwisko</th>
+                  <th className="px-3 py-3.5 font-semibold">Rola</th>
+                  <th className="px-3 py-3.5 font-semibold">Data przyjęcia</th>
+                  <th className="px-3 py-3.5 font-semibold">Składki</th>
+                  <th className="px-3 py-3.5 text-right font-semibold">Suma składek {allYears ? '(wszystkie lata)' : year}</th>
+                  <th className="px-3 py-3.5 font-semibold">Konto</th>
+                  <th className="px-4 py-3.5 font-semibold">Akcje</th>
+                </tr>
+              </thead>
+              <tbody>
+                {list.map((m) => {
+                  const due = dueById.get(m.id) ?? 0;
+                  return (
+                    <tr key={m.id} className="border-t border-[#EDF0F3]">
+                      <td className="px-4 py-2.5 font-semibold">{m.login}</td>
+                      <td className="px-3 py-2.5 text-ink-soft">{m.member_no ?? '–'}</td>
+                      <td className="px-3 py-2.5">
+                        <a href={`/zarzad/czlonek/${m.id}`} className="font-semibold text-navy underline">
+                          {m.first_name} {m.last_name}
+                        </a>
+                      </td>
+                      <td className="px-3 py-2.5 text-ink-soft">{m.is_board ? 'Zarząd' : 'Członek'}</td>
+                      <td className="px-3 py-2.5 text-ink-soft">{formatDate(m.joined_at)}</td>
+                      <td className="px-3 py-2.5">
+                        {due === 0 ? (
+                          <span className="chip bg-ok-light py-0.5 text-ok">Opłacone</span>
+                        ) : (
+                          <span className="chip bg-warn-light py-0.5 text-warn">Zaległość {due} mies.</span>
+                        )}
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-2.5 text-right font-semibold tabular-nums">
+                        {formatAmount(sumById.get(m.id) ?? 0)}
+                      </td>
+                      <td className="px-3 py-2.5 font-semibold">
+                        {m.status === 'aktywny' ? (
+                          <span className="text-ok">Aktywne</span>
+                        ) : (
+                          <span className="text-[#9B1C1C]">Zablokowane</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-1.5">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <a href={`/zarzad/czlonek/${m.id}?wplata=1#wplata`} className="btn-secondary px-2.5 text-sm">
+                            Dodaj wpłatę
+                          </a>
+                          <ResetPasswordButton memberId={m.id} />
+                          {m.is_board && m.id !== me.id && (
+                            <form action={resetTwoFactor}>
+                              <input type="hidden" name="member_id" value={m.id} />
+                              <button type="submit" className="btn-secondary px-2.5 text-sm">
+                                Reset 2FA
+                              </button>
+                            </form>
+                          )}
+                          {m.id !== me.id && (
+                            <form action={toggleBlock}>
+                              <input type="hidden" name="member_id" value={m.id} />
+                              <button type="submit" className="btn-secondary px-2.5 text-sm">
+                                {m.status === 'aktywny' ? 'Zablokuj' : 'Odblokuj'}
+                              </button>
+                            </form>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+                {list.length === 0 && (
+                  <tr>
+                    <td colSpan={9} className="px-4 py-6 text-ink-muted">
+                      Brak członków spełniających kryteria.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+              {list.length > 0 && (
+                <tfoot>
+                  <tr className="border-t-2 border-line bg-page">
+                    <td colSpan={6} className="px-4 py-3 font-semibold">
+                      Razem ({list.length} {list.length === 1 ? 'osoba' : 'osób'})
+                    </td>
+                    <td className="whitespace-nowrap px-3 py-3 text-right font-bold tabular-nums">
+                      {formatAmount(list.reduce((s, m) => s + (sumById.get(m.id) ?? 0), 0))}
+                    </td>
+                    <td colSpan={2} />
+                  </tr>
+                </tfoot>
+              )}
+            </table>
+          </div>
+        </section>
+
+        <details id="nowy" open={nowy === '1'} className="group card flex flex-col">
+          <summary className="btn-primary inline-flex cursor-pointer list-none self-start group-open:mb-4 [&::-webkit-details-marker]:hidden">
+            <span className="group-open:hidden">+ Dodaj nowego członka</span>
+            <span className="hidden group-open:inline">Zwiń formularz</span>
+          </summary>
+          <AddMemberForm />
+        </details>
 
         {(declarations?.length ?? 0) > 0 && (
           <section className="flex flex-col gap-3" aria-labelledby="dek">
@@ -68,106 +221,6 @@ export default async function BoardPage({ searchParams }: { searchParams: Promis
             ))}
           </section>
         )}
-
-        <section className="card flex flex-col gap-3" aria-labelledby="nowy">
-          <h2 id="nowy" className="text-lg font-bold">
-            Dodaj członka
-          </h2>
-          <AddMemberForm />
-        </section>
-
-        <section className="flex flex-col gap-3" aria-labelledby="lista">
-          <h2 id="lista" className="sr-only">
-            Lista członków
-          </h2>
-          <form className="flex max-w-[420px] flex-col gap-1.5" role="search">
-            <label htmlFor="q" className="label">
-              Szukaj po nazwisku, loginie lub numerze
-            </label>
-            <div className="flex gap-2">
-              <input id="q" name="q" type="search" defaultValue={q} className="field" />
-              <button type="submit" className="btn-secondary">
-                Szukaj
-              </button>
-            </div>
-          </form>
-          <div className="overflow-x-auto rounded-[10px] border border-line bg-white">
-            <table className="w-full min-w-[860px] border-collapse">
-              <thead>
-                <tr className="text-left text-sm text-ink-muted">
-                  <th className="px-4 py-3.5 font-semibold">Login</th>
-                  <th className="px-3 py-3.5 font-semibold">Nr członkowski</th>
-                  <th className="px-3 py-3.5 font-semibold">Imię i nazwisko</th>
-                  <th className="px-3 py-3.5 font-semibold">Rola</th>
-                  <th className="px-3 py-3.5 font-semibold">Data przyjęcia</th>
-                  <th className="px-3 py-3.5 font-semibold">Składki</th>
-                  <th className="px-3 py-3.5 font-semibold">Konto</th>
-                  <th className="px-4 py-3.5 font-semibold">Akcje</th>
-                </tr>
-              </thead>
-              <tbody>
-                {list.map((m) => {
-                  const due = dueById.get(m.id) ?? 0;
-                  return (
-                    <tr key={m.id} className="border-t border-[#EDF0F3]">
-                      <td className="px-4 py-2.5 font-semibold">{m.login}</td>
-                      <td className="px-3 py-2.5 text-ink-soft">{m.member_no ?? '–'}</td>
-                      <td className="px-3 py-2.5">
-                        <a href={`/zarzad/czlonek/${m.id}`} className="font-semibold text-navy underline">
-                          {m.first_name} {m.last_name}
-                        </a>
-                      </td>
-                      <td className="px-3 py-2.5 text-ink-soft">{m.is_board ? 'Zarząd' : 'Członek'}</td>
-                      <td className="px-3 py-2.5 text-ink-soft">{formatDate(m.joined_at)}</td>
-                      <td className="px-3 py-2.5">
-                        {due === 0 ? (
-                          <span className="chip bg-ok-light py-0.5 text-ok">Opłacone</span>
-                        ) : (
-                          <span className="chip bg-warn-light py-0.5 text-warn">Zaległość {due} mies.</span>
-                        )}
-                      </td>
-                      <td className="px-3 py-2.5 font-semibold">
-                        {m.status === 'aktywny' ? (
-                          <span className="text-ok">Aktywne</span>
-                        ) : (
-                          <span className="text-[#9B1C1C]">Zablokowane</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-1.5">
-                        <div className="flex flex-wrap items-center gap-1.5">
-                          <ResetPasswordButton memberId={m.id} />
-                          {m.is_board && m.id !== me.id && (
-                            <form action={resetTwoFactor}>
-                              <input type="hidden" name="member_id" value={m.id} />
-                              <button type="submit" className="btn-secondary px-2.5 text-sm">
-                                Reset 2FA
-                              </button>
-                            </form>
-                          )}
-                          {m.id !== me.id && (
-                            <form action={toggleBlock}>
-                              <input type="hidden" name="member_id" value={m.id} />
-                              <button type="submit" className="btn-secondary px-2.5 text-sm">
-                                {m.status === 'aktywny' ? 'Zablokuj' : 'Odblokuj'}
-                              </button>
-                            </form>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-                {list.length === 0 && (
-                  <tr>
-                    <td colSpan={8} className="px-4 py-6 text-ink-muted">
-                      Brak członków spełniających kryteria.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </section>
     </BoardShell>
   );
 }

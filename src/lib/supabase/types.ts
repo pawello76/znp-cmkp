@@ -178,6 +178,7 @@ export type Database = {
           active_from: string | null
           benefit_id: string
           card_number: string | null
+          card_issued_on: string | null
           created_at: string
           decided_at: string | null
           decided_by: string | null
@@ -192,6 +193,7 @@ export type Database = {
           active_from?: string | null
           benefit_id: string
           card_number?: string | null
+          card_issued_on?: string | null
           created_at?: string
           decided_at?: string | null
           decided_by?: string | null
@@ -206,6 +208,7 @@ export type Database = {
           active_from?: string | null
           benefit_id?: string
           card_number?: string | null
+          card_issued_on?: string | null
           created_at?: string
           decided_at?: string | null
           decided_by?: string | null
@@ -277,6 +280,7 @@ export type Database = {
           is_visible: boolean
           name: string
           sort_order: number
+          value_grosz: number | null
           updated_at: string
           updated_by: string | null
         }
@@ -288,6 +292,7 @@ export type Database = {
           is_visible?: boolean
           name: string
           sort_order?: number
+          value_grosz?: number | null
           updated_at?: string
           updated_by?: string | null
         }
@@ -299,6 +304,7 @@ export type Database = {
           is_visible?: boolean
           name?: string
           sort_order?: number
+          value_grosz?: number | null
           updated_at?: string
           updated_by?: string | null
         }
