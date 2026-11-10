@@ -8,12 +8,28 @@ export default async function BoardPage({ searchParams }: { searchParams: Promis
   const { supabase, member: me } = await requireBoard();
   const { q = '', rok, nowy } = await searchParams;
 
-  const [{ data: members }, { data: dues }, { data: declarations }, { data: payments }] = await Promise.all([
+  const [{ data: members }, { data: dues }, { data: declarations }, { data: payments }, { data: bens }, { data: threads }, { data: regs }] = await Promise.all([
     supabase.from('members').select('*').order('last_name'),
     supabase.from('member_dues_status').select('member_id, months_due'),
     supabase.from('declarations').select('*').eq('status', 'oczekuje').order('created_at'),
     supabase.from('dues_payments').select('member_id, amount_grosz, paid_on'),
+    supabase.from('benefit_requests').select('member_id, value_grosz').eq('status', 'przyznany'),
+    supabase.from('message_threads').select('member_id').eq('board_folder', 'aktualne'),
+    supabase.from('event_registrations').select('member_id'),
   ]);
+
+  const benById = new Map<string, { n: number; sum: number }>();
+  for (const b of bens ?? []) {
+    const cur = benById.get(b.member_id) ?? { n: 0, sum: 0 };
+    benById.set(b.member_id, { n: cur.n + 1, sum: cur.sum + (b.value_grosz ?? 0) });
+  }
+  const countBy = (rows: { member_id: string }[] | null) => {
+    const m = new Map<string, number>();
+    for (const r of rows ?? []) m.set(r.member_id, (m.get(r.member_id) ?? 0) + 1);
+    return m;
+  };
+  const unreadById = countBy(threads);
+  const eventsById = countBy(regs);
 
   // Suma składek: wybrany rok (domyślnie bieżący) albo wszystkie lata
   const currentYear = new Date().getFullYear();
@@ -87,7 +103,7 @@ export default async function BoardPage({ searchParams }: { searchParams: Promis
             </button>
           </form>
           <div className="overflow-x-auto rounded-[10px] border border-line bg-white">
-            <table className="w-full min-w-[1080px] border-collapse">
+            <table className="w-full min-w-[1440px] border-collapse">
               <thead>
                 <tr className="text-left text-sm text-ink-muted">
                   <th className="px-4 py-3.5 font-semibold">Login</th>
@@ -97,6 +113,10 @@ export default async function BoardPage({ searchParams }: { searchParams: Promis
                   <th className="px-3 py-3.5 font-semibold">Data przyjęcia</th>
                   <th className="px-3 py-3.5 font-semibold">Składki</th>
                   <th className="px-3 py-3.5 text-right font-semibold">Suma składek {allYears ? '(wszystkie lata)' : year}</th>
+                  <th className="px-3 py-3.5 text-right font-semibold">Benefity</th>
+                  <th className="px-3 py-3.5 text-right font-semibold">Wartość benefitów</th>
+                  <th className="px-3 py-3.5 text-right font-semibold">Nieprzeczytane wiadomości</th>
+                  <th className="px-3 py-3.5 text-right font-semibold">Wydarzenia</th>
                   <th className="px-3 py-3.5 font-semibold">Konto</th>
                   <th className="px-4 py-3.5 font-semibold">Akcje</th>
                 </tr>
@@ -125,6 +145,16 @@ export default async function BoardPage({ searchParams }: { searchParams: Promis
                       <td className="whitespace-nowrap px-3 py-2.5 text-right font-semibold tabular-nums">
                         {formatAmount(sumById.get(m.id) ?? 0)}
                       </td>
+                      <td className="px-3 py-2.5 text-right tabular-nums">{benById.get(m.id)?.n ?? 0}</td>
+                      <td className="whitespace-nowrap px-3 py-2.5 text-right tabular-nums">{formatAmount(benById.get(m.id)?.sum ?? 0)}</td>
+                      <td className="px-3 py-2.5 text-right tabular-nums">
+                        {(unreadById.get(m.id) ?? 0) > 0 ? (
+                          <span className="chip bg-accent-light py-0.5 text-accent">{unreadById.get(m.id)}</span>
+                        ) : (
+                          0
+                        )}
+                      </td>
+                      <td className="px-3 py-2.5 text-right tabular-nums">{eventsById.get(m.id) ?? 0}</td>
                       <td className="px-3 py-2.5 font-semibold">
                         {m.status === 'aktywny' ? (
                           <span className="text-ok">Aktywne</span>
@@ -161,7 +191,7 @@ export default async function BoardPage({ searchParams }: { searchParams: Promis
                 })}
                 {list.length === 0 && (
                   <tr>
-                    <td colSpan={9} className="px-4 py-6 text-ink-muted">
+                    <td colSpan={13} className="px-4 py-6 text-ink-muted">
                       Brak członków spełniających kryteria.
                     </td>
                   </tr>
@@ -175,6 +205,18 @@ export default async function BoardPage({ searchParams }: { searchParams: Promis
                     </td>
                     <td className="whitespace-nowrap px-3 py-3 text-right font-bold tabular-nums">
                       {formatAmount(list.reduce((s, m) => s + (sumById.get(m.id) ?? 0), 0))}
+                    </td>
+                    <td className="px-3 py-3 text-right font-bold tabular-nums">
+                      {list.reduce((s, m) => s + (benById.get(m.id)?.n ?? 0), 0)}
+                    </td>
+                    <td className="whitespace-nowrap px-3 py-3 text-right font-bold tabular-nums">
+                      {formatAmount(list.reduce((s, m) => s + (benById.get(m.id)?.sum ?? 0), 0))}
+                    </td>
+                    <td className="px-3 py-3 text-right font-bold tabular-nums">
+                      {list.reduce((s, m) => s + (unreadById.get(m.id) ?? 0), 0)}
+                    </td>
+                    <td className="px-3 py-3 text-right font-bold tabular-nums">
+                      {list.reduce((s, m) => s + (eventsById.get(m.id) ?? 0), 0)}
                     </td>
                     <td colSpan={2} />
                   </tr>
