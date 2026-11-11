@@ -81,6 +81,16 @@ export function AddMemberForm() {
           </label>
           <input id="add-position" name="position" className="field" />
         </div>
+        <div className="flex flex-[1_1_180px] flex-col gap-1.5">
+          <label htmlFor="add-dm" className="label">
+            Forma opłaty składek
+          </label>
+          <select id="add-dm" name="dues_method" defaultValue="" className="field">
+            <option value="">– nie wybrano –</option>
+            <option value="pracodawca">Pracodawca</option>
+            <option value="przelew">Przelew</option>
+          </select>
+        </div>
       </div>
       <label className="flex min-h-[44px] items-center gap-2.5">
         <input type="checkbox" name="is_board" className="h-5 w-5" />

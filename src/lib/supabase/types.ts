@@ -815,6 +815,7 @@ export type Database = {
           joined_at: string
           last_name: string
           last_seen_at: string | null
+          dues_method: string | null
           login: string
           member_no: string | null
           must_change_password: boolean
@@ -835,6 +836,7 @@ export type Database = {
           joined_at?: string
           last_name: string
           last_seen_at?: string | null
+          dues_method?: string | null
           login: string
           member_no?: string | null
           must_change_password?: boolean
@@ -855,6 +857,7 @@ export type Database = {
           joined_at?: string
           last_name?: string
           last_seen_at?: string | null
+          dues_method?: string | null
           login?: string
           member_no?: string | null
           must_change_password?: boolean

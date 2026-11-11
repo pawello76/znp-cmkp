@@ -42,7 +42,7 @@ function Field({
 }
 
 const inp =
-  'h-10 w-full rounded-md border border-line-strong bg-white px-2.5 text-[15px] disabled:border-transparent disabled:bg-page disabled:px-2.5 disabled:text-ink disabled:opacity-100';
+  'h-10 w-full rounded-md border border-line-strong bg-white px-2.5 text-[15px] disabled:border-transparent disabled:bg-page disabled:px-2.5 disabled:text-ink disabled:opacity-100 disabled:appearance-none';
 
 function Cell({ id, label, children, wide = false }: { id: string; label: string; children: React.ReactNode; wide?: boolean }) {
   return (
@@ -95,13 +95,20 @@ export function EditMemberForm({ member, isSelf }: { member: Member; isSelf: boo
         <Cell id="e-position" label="Stanowisko">
           <input id="e-position" name="position" defaultValue={member.position ?? ''} className={inp} />
         </Cell>
+        <Cell id="e-dm" label="Forma opłaty składek">
+          <select id="e-dm" name="dues_method" defaultValue={member.dues_method ?? ''} className={inp}>
+            <option value="">– nie wybrano –</option>
+            <option value="pracodawca">Pracodawca</option>
+            <option value="przelew">Przelew</option>
+          </select>
+        </Cell>
         <Cell id="e-joined" label="Data przyjęcia">
           <input id="e-joined" name="joined_at" type="date" defaultValue={member.joined_at} required className={inp} />
         </Cell>
         <Cell id="e-card" label="Legitymacja ważna do">
           <input id="e-card" name="card_valid_until" type="date" defaultValue={member.card_valid_until ?? ''} className={inp} />
         </Cell>
-        <div className="col-span-2 flex items-end">
+        <div className="col-span-2 flex items-end sm:col-span-1">
           <label className="flex min-h-10 items-center gap-2.5 text-[15px]">
             <input type="checkbox" name="is_board" defaultChecked={member.is_board} disabled={isSelf || !editing} className="h-5 w-5" />
             <span>Członek zarządu{isSelf && editing ? ' (nie możesz zmienić własnej roli)' : ''}</span>

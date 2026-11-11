@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
 
   const header = [
     'Login', 'Numer członkowski', 'Imię', 'Nazwisko', 'Rola', 'Jednostka', 'Stanowisko', 'E-mail',
-    'Data przyjęcia', 'Legitymacja ważna do', 'Składki opłacone do', 'Zaległość (mies.)',
+    'Data przyjęcia', 'Legitymacja ważna do', 'Składki opłacone do', 'Zaległość (mies.)', 'Forma opłaty składek',
     allYears ? 'Suma składek – wszystkie lata (zł)' : `Suma składek ${year} (zł)`,
     'Liczba benefitów', 'Wartość benefitów (zł)', 'Nieprzeczytane wiadomości', 'Zapisy na wydarzenia', 'Konto', 'Ostatnie logowanie',
   ];
@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
     const d = dueById.get(m.id);
     return [
       m.login, m.member_no, m.first_name, m.last_name, m.is_board ? 'Zarząd' : 'Członek', m.unit, m.position, m.email,
-      m.joined_at, cardValidUntil(m), d?.paid_until?.slice(0, 7) ?? '', d?.months_due ?? 0,
+      m.joined_at, cardValidUntil(m), d?.paid_until?.slice(0, 7) ?? '', d?.months_due ?? 0, m.dues_method === 'pracodawca' ? 'Pracodawca' : m.dues_method === 'przelew' ? 'Przelew' : '',
       zl(paid.get(m.id) ?? 0), benN.get(m.id) ?? 0, zl(benSum.get(m.id) ?? 0), unread.get(m.id) ?? 0, events.get(m.id) ?? 0,
       STATUS[m.status] ?? m.status, m.last_seen_at ? formatDateTime(m.last_seen_at) : '-',
     ].map(cell).join(';');

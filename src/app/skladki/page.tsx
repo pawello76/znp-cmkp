@@ -42,6 +42,12 @@ export default async function DuesPage({ searchParams }: { searchParams: Promise
             <span className="text-sm text-ink-muted">{all ? 'Suma wszystkich wpłat' : `Suma wpłat w ${year}`}</span>
             <span className="text-[22px] font-bold">{formatAmount(yearTotal)}</span>
           </div>
+          <div className="card flex flex-col gap-1.5">
+            <span className="text-sm text-ink-muted">Forma opłaty składek</span>
+            <span className="text-[22px] font-bold">
+              {member.dues_method === 'pracodawca' ? 'Pracodawca' : member.dues_method === 'przelew' ? 'Przelew' : '–'}
+            </span>
+          </div>
         </div>
 
         <nav aria-label="Filtr roku" className="flex flex-wrap items-center gap-2">

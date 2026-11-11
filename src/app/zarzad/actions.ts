@@ -15,8 +15,14 @@ type NewMember = {
   email: string | null;
   unit: string | null;
   position: string | null;
+  duesMethod: string | null;
   joinedAt: string | null;
   isBoard: boolean;
+};
+
+const method = (v: FormDataEntryValue | null) => {
+  const s = String(v ?? '');
+  return s === 'pracodawca' || s === 'przelew' ? s : null;
 };
 
 const text = (v: FormDataEntryValue | null) => {
@@ -68,6 +74,7 @@ async function createAccount(input: NewMember): Promise<{ id?: string; tempPassw
     email: input.email,
     unit: input.unit,
     position: input.position,
+    dues_method: input.duesMethod,
     is_board: input.isBoard,
     ...(input.joinedAt ? { joined_at: input.joinedAt } : {}),
   });
@@ -93,6 +100,7 @@ export async function addMember(_prev: AccountResult, formData: FormData): Promi
     email: text(formData.get('email')),
     unit: text(formData.get('unit')),
     position: text(formData.get('position')),
+    duesMethod: method(formData.get('dues_method')),
     joinedAt: text(formData.get('joined_at')),
     isBoard: formData.get('is_board') === 'on',
   });
@@ -119,6 +127,7 @@ export async function approveDeclaration(_prev: AccountResult, formData: FormDat
     email: d.email,
     unit: d.unit,
     position: d.position,
+    duesMethod: method(formData.get('dues_method')),
     joinedAt: null,
     isBoard: false,
   });

@@ -103,7 +103,7 @@ export default async function BoardPage({ searchParams }: { searchParams: Promis
             </button>
           </form>
           <div className="overflow-x-auto rounded-[10px] border border-line bg-white">
-            <table className="w-full min-w-[1320px] text-sm border-collapse">
+            <table className="w-full min-w-[1400px] text-sm border-collapse">
               <thead>
                 <tr className="text-left text-[13px] leading-tight text-ink-muted">
                   <th className="px-3 py-2 font-semibold">Login</th>
@@ -112,6 +112,7 @@ export default async function BoardPage({ searchParams }: { searchParams: Promis
                   <th className="px-2 py-2 font-semibold">Rola</th>
                   <th className="px-2 py-2 font-semibold">Przyjęty</th>
                   <th className="px-2 py-2 font-semibold">Status składek</th>
+                  <th className="px-2 py-2 font-semibold">Forma opłaty</th>
                   <th className="px-2 py-2 text-right font-semibold">Składki {allYears ? 'razem' : year}</th>
                   <th className="px-2 py-2 text-right font-semibold">Benefity</th>
                   <th className="px-2 py-2 text-right font-semibold">Wart. benefitów</th>
@@ -142,6 +143,9 @@ export default async function BoardPage({ searchParams }: { searchParams: Promis
                         ) : (
                           <span className="chip whitespace-nowrap bg-warn-light px-2 py-0 text-[13px] text-warn">Zaległość {due} mies.</span>
                         )}
+                      </td>
+                      <td className="px-2 py-1.5 text-ink-soft">
+                        {m.dues_method === 'pracodawca' ? 'Pracodawca' : m.dues_method === 'przelew' ? 'Przelew' : '–'}
                       </td>
                       <td className="whitespace-nowrap px-2 py-1.5 text-right font-semibold tabular-nums">
                         {formatAmount(sumById.get(m.id) ?? 0)}
@@ -177,7 +181,7 @@ export default async function BoardPage({ searchParams }: { searchParams: Promis
                 })}
                 {list.length === 0 && (
                   <tr>
-                    <td colSpan={14} className="px-4 py-6 text-ink-muted">
+                    <td colSpan={15} className="px-4 py-6 text-ink-muted">
                       Brak członków spełniających kryteria.
                     </td>
                   </tr>
@@ -186,7 +190,7 @@ export default async function BoardPage({ searchParams }: { searchParams: Promis
               {list.length > 0 && (
                 <tfoot>
                   <tr className="border-t-2 border-line bg-page">
-                    <td colSpan={6} className="px-4 py-3 font-semibold">
+                    <td colSpan={7} className="px-4 py-3 font-semibold">
                       Razem ({list.length} {list.length === 1 ? 'osoba' : 'osób'})
                     </td>
                     <td className="whitespace-nowrap px-3 py-3 text-right font-bold tabular-nums">

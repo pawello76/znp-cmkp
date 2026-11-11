@@ -59,6 +59,7 @@ export async function updateMember(_prev: FormState, formData: FormData): Promis
       email: text(formData.get('email')),
       unit: text(formData.get('unit')),
       position: text(formData.get('position')),
+      dues_method: ['pracodawca', 'przelew'].includes(String(formData.get('dues_method'))) ? String(formData.get('dues_method')) : null,
       joined_at: joinedAt!,
       card_valid_until: cardValidUntil,
       is_board: isBoard,
