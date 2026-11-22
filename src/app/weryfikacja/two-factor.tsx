@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 type Enrollment = { factorId: string; qr: string; secret: string };
 
 /** Rejestracja aplikacji uwierzytelniającej (pierwszy raz) albo podanie kodu przy logowaniu. */
-export function TwoFactor({ factorId }: { factorId: string | null }) {
+export function TwoFactor({ factorId, next = '/zarzad' }: { factorId: string | null; next?: string }) {
   const [enrollment, setEnrollment] = useState<Enrollment | null>(null);
   const [code, setCode] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -49,7 +49,7 @@ export function TwoFactor({ factorId }: { factorId: string | null }) {
       setError('Nieprawidłowy kod. Wpisz aktualny kod z aplikacji.');
       return;
     }
-    window.location.assign('/zarzad');
+    window.location.assign(next);
   }
 
   return (

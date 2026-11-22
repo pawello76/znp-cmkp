@@ -38,6 +38,15 @@ export async function requireBoard() {
   return ctx;
 }
 
+/**
+ * Konto z włączoną weryfikacją dwuetapową może zmienić hasło dopiero po wpisaniu
+ * kodu (wymóg Supabase: sesja AAL2). Zwraca true, gdy trzeba najpierw podać kod.
+ */
+export async function needsSecondFactor(supabase: Awaited<ReturnType<typeof createClient>>) {
+  const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+  return aal?.nextLevel === 'aal2' && aal.currentLevel !== 'aal2';
+}
+
 /** Ważność legitymacji: data ustawiona przez zarząd, a domyślnie koniec bieżącego roku. */
 export function cardValidUntil(member: Member): string {
   return member.card_valid_until ?? `${new Date().getFullYear()}-12-31`;

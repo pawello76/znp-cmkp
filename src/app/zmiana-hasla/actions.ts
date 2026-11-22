@@ -2,12 +2,13 @@
 
 import { redirect } from 'next/navigation';
 import { PASSWORD_MIN_LENGTH } from '@/lib/auth';
-import { requireMember } from '@/lib/session';
+import { needsSecondFactor, requireMember } from '@/lib/session';
 
 export type ChangePasswordState = { error?: string };
 
 export async function changePassword(_prev: ChangePasswordState, formData: FormData): Promise<ChangePasswordState> {
   const { supabase } = await requireMember({ allowTempPassword: true });
+  if (await needsSecondFactor(supabase)) redirect('/weryfikacja?next=/zmiana-hasla');
   const password = String(formData.get('password') ?? '');
   const repeat = String(formData.get('repeat') ?? '');
 
@@ -18,6 +19,7 @@ export async function changePassword(_prev: ChangePasswordState, formData: FormD
   if (error) {
     if (error.code === 'same_password') return { error: 'Nowe hasło musi różnić się od obecnego.' };
     if (error.code === 'weak_password') return { error: 'Hasło jest zbyt słabe. Użyj dłuższego hasła.' };
+    if (error.code === 'insufficient_aal') redirect('/weryfikacja?next=/zmiana-hasla');
     return { error: 'Nie udało się zmienić hasła. Spróbuj ponownie.' };
   }
 

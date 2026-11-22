@@ -1,9 +1,11 @@
 import { PASSWORD_MIN_LENGTH } from '@/lib/auth';
-import { requireMember } from '@/lib/session';
+import { redirect } from 'next/navigation';
+import { needsSecondFactor, requireMember } from '@/lib/session';
 import { ChangePasswordForm } from './form';
 
 export default async function ChangePasswordPage() {
-  const { member } = await requireMember({ allowTempPassword: true });
+  const { supabase, member } = await requireMember({ allowTempPassword: true });
+  if (await needsSecondFactor(supabase)) redirect('/weryfikacja?next=/zmiana-hasla');
 
   return (
     <main className="flex min-h-screen items-center justify-center px-6 py-12">
