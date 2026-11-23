@@ -5,6 +5,12 @@ import type { Database } from './supabase/types';
 export type Member = Database['public']['Tables']['members']['Row'];
 
 /**
+ * Czy panel zarządu wymaga kodu z telefonu (weryfikacja dwuetapowa, TOTP).
+ * Wyłączone na start na prośbę zarządu (2026-11-23). Aby włączyć: ustaw true.
+ */
+export const REQUIRE_BOARD_2FA = false;
+
+/**
  * Wymaga zalogowanego, aktywnego członka. Konto z hasłem tymczasowym
  * trafia najpierw na ekran zmiany hasła.
  */
@@ -32,8 +38,10 @@ export async function requireBoard() {
   const ctx = await requireMember();
   if (!ctx.member.is_board) redirect('/');
 
-  const { data: aal } = await ctx.supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-  if (aal?.currentLevel !== 'aal2') redirect('/weryfikacja');
+  if (REQUIRE_BOARD_2FA) {
+    const { data: aal } = await ctx.supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    if (aal?.currentLevel !== 'aal2') redirect('/weryfikacja');
+  }
 
   return ctx;
 }

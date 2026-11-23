@@ -1,10 +1,11 @@
 import { redirect } from 'next/navigation';
-import { requireMember } from '@/lib/session';
+import { REQUIRE_BOARD_2FA, requireMember } from '@/lib/session';
 import { TwoFactor } from './two-factor';
 
 export default async function VerificationPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
   const { supabase, member } = await requireMember({ allowTempPassword: true });
   const { next: nextParam } = await searchParams;
+  if (!REQUIRE_BOARD_2FA) redirect(member.must_change_password ? '/zmiana-hasla' : member.is_board ? '/zarzad' : '/');
   // po kodzie: najpierw ustawienie hasła (jeśli tymczasowe), potem panel zarządu
   const next = member.must_change_password || nextParam === '/zmiana-hasla' ? '/zmiana-hasla' : '/zarzad';
 

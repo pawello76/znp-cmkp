@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { BoardShell } from '@/components/shell';
 import { formatAmount, formatDate, formatDateTime, formatMonth } from '@/lib/format';
-import { cardValidUntil, requireBoard } from '@/lib/session';
+import { REQUIRE_BOARD_2FA, cardValidUntil, requireBoard } from '@/lib/session';
 import { deletePayment } from './actions';
 import { AddPaymentForm, EditMemberForm } from './forms';
 import { ResetPasswordButton } from '../../czlonkowie/forms';
@@ -86,7 +86,7 @@ export default async function MemberEditPage({
                 </button>
               </form>
             )}
-            {m.is_board && m.id !== me.id && (
+            {REQUIRE_BOARD_2FA && m.is_board && m.id !== me.id && (
               <form action={resetTwoFactor}>
                 <input type="hidden" name="member_id" value={m.id} />
                 <button type="submit" className="font-semibold text-navy underline">
